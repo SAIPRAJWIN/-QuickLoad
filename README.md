@@ -1,0 +1,1 @@
+# QuickLoad-A-Reliable-Platform-for-integrating-the-Goods-Transport-with-Smart-Vehicle-Allocation
