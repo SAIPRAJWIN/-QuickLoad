@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Trips - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        /* Reuse your existing variables */
+        :root {
+            --primary-color:#c9a24d;
+            --dark-color: #1f2937;
+            --header-bg: #111827;
+            --main-bg: #f9fafb;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --success-bg: #dcfce7; --success-text: #166534;
+            --danger-bg: #fee2e2; --danger-text: #991b1b;
+            --warning-bg: #ffedd5; --warning-text: #9a3412;
+            --info-bg: #e0f2fe; --info-text: #0369a1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Poppins", sans-serif; background-color: var(--main-bg); color: var(--text-color); min-height: 100vh; }
+
+        /* --- Header (Same as other pages) --- */
+        .top-header { background-color: var(--header-bg); color: #ffffff; padding: 0 5%; height: 70px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1001; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-left { display: flex; align-items: center; gap: 40px; }
+        .logo img { height: 45px; }
+        .top-nav-list { display: flex; list-style: none; gap: 10px; }
+        .top-nav-item a { color: #d1d5db; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .top-nav-item a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .top-nav-item a.active { background: var(--primary-color); color: #fff; font-weight: 600; }
+        .logout-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; background: var(--danger-bg); color: var(--danger-text); text-decoration: none; font-weight: 600; transition: 0.3s; }
+
+        /* Content */
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 5%; width: 100%; }
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: var(--dark-color); }
+
+        /* Summary Cards */
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .card { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .card-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .card-info .value { font-size: 1.8rem; font-weight: 700; color: var(--dark-color); }
+        .card-info .label { color: var(--text-light); font-size: 0.9rem; }
+
+        /* Filters & Table */
+        .controls-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-bar { flex: 1; padding: 12px 20px; border-radius: 50px; border: 1px solid var(--border-color); font-family: inherit; min-width: 250px; }
+        .filter-select { padding: 0 20px; border-radius: 50px; border: 1px solid var(--border-color); font-family: inherit; background: white; cursor: pointer; }
+
+        .table-container { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .data-table th { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-Completed { background: var(--success-bg); color: var(--success-text); }
+        .status-Accepted { background: #f3e8ff; color: #6b21a8; }
+        .status-Ongoing { background: var(--info-bg); color: var(--info-text); animation: pulse 2s infinite; }
+        .status-Pending { background: var(--warning-bg); color: var(--warning-text); }
+        .status-Cancelled { background: var(--danger-bg); color: var(--danger-text); }
+
+        .btn-view { padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); background: white; color: var(--text-color); font-size: 0.85rem; }
+        .btn-view:hover { background: #f3f4f6; border-color: var(--primary-color); color: var(--primary-color); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content-wide { background: #fff; border-radius: 20px; width: 95%; max-width: 900px; display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 2rem; overflow-y: auto; background: #f9fafb; }
+        
+        .trip-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .detail-group h3 { font-size: 0.9rem; text-transform: uppercase; color: var(--text-light); margin-bottom: 15px; border-bottom: 2px solid var(--primary-color); display: inline-block; padding-bottom: 5px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+        .info-row span:first-child { color: var(--text-light); font-weight: 500; font-size: 0.9rem; }
+        .info-row span:last-child { color: var(--dark-color); font-weight: 600; }
+
+        .route-visual { grid-column: 1 / -1; background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+        .route-point { flex: 1; }
+        .route-arrow { color: var(--primary-color); font-size: 24px; }
+        .rp-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 5px; }
+        .rp-val { font-size: 1.1rem; font-weight: 600; color: var(--dark-color); }
+
+        .modal-footer { padding: 1.5rem; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-cancel:hover { background: #fee2e2; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+      .admin-info { display: flex; align-items: center; gap: 10px; color: #d1d5db; font-size: 0.9rem; }
+        .admin-avatar { width: 32px; height: 32px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; }
+    /* --- Flash Message Notification Styles --- */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 9999;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+    background: white;
+}
+
+.alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+.close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+.close-btn:hover { opacity: 1; }
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Custom Confirmation Modal Styles --- */
+.confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px); animation: fadeIn 0.2s;
+}
+.confirm-overlay.active { display: flex; }
+
+.confirm-box {
+    background: white; width: 90%; max-width: 420px; padding: 30px;
+    border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    text-align: center; transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.confirm-overlay.active .confirm-box { transform: scale(1); }
+
+.confirm-icon { 
+    width: 70px; height: 70px; background: #fee2e2; color: #dc2626;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+.confirm-icon .material-symbols-outlined { font-size: 36px; }
+
+.confirm-title { font-size: 1.4rem; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+.confirm-desc { font-size: 1rem; color: #6b7280; margin-bottom: 30px; line-height: 1.5; }
+
+.confirm-actions { display: flex; gap: 15px; }
+.confirm-btn { 
+    flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; 
+    cursor: pointer; border: none; font-size: 1rem; transition: all 0.2s;
+}
+.btn-cancel-modal { background: #f3f4f6; color: #374151; }
+.btn-cancel-modal:hover { background: #e5e7eb; }
+
+.btn-confirm-modal { background: #dc2626; color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+.btn-confirm-modal:hover { background: #b91c1c; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="logo"><img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="Logo"></div>
+            <nav>
+                <ul class="top-nav-list">
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" >
+                            <span class="material-symbols-outlined">dashboard</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_driver_applications') }}">
+                            <span class="material-symbols-outlined">assignment_ind</span> Applications
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_drivers') }}">
+                            <span class="material-symbols-outlined">group</span> Drivers
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_users') }}">
+                            <span class="material-symbols-outlined">people</span> Customers
+                        </a>
+                    </li>
+
+                    <li class="top-nav-item">
+    <a href="{{ url_for('manage_trips') }}" class="active">
+        <span class="material-symbols-outlined">alt_route</span> Trips
+    </a>
+</li>
+
+<li class="top-nav-item">
+        <a href="{{ url_for('admin_developers') }}">
+            <span class="material-symbols-outlined">engineering</span> Developers
+        </a>
+    </li>
+                     
+                </ul>
+            </nav>
+        </div>
+          <div class="header-actions">
+        <a href="{{ url_for('admin_profile') }}" style="text-decoration:none;">
+    <div class="admin-info" style="display:flex; align-items:center; gap:10px; color:#d1d5db; cursor:pointer;">
+        <div class="admin-avatar" style="width:32px; height:32px; background:var(--primary-color); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">
+            {{ session.admin_username[0] | upper }}
+        </div>
+        <span style="font-weight:500;">{{ session.admin_username }}</span>
+    </div>
+</a>
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+          <span class="material-symbols-outlined">logout</span> Logout
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Trip Management</h1>
+            <p>Monitor and manage all booking activities.</p>
+        </div>
+
+        <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-icon" style="background:#e0f2fe; color:#0369a1;"><span class="material-symbols-outlined">all_inclusive</span></div>
+                <div><div class="value">{{ summary.total }}</div><div class="label">Total Trips</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#dcfce7; color:#166534;"><span class="material-symbols-outlined">check_circle</span></div>
+                <div><div class="value">{{ summary.completed }}</div><div class="label">Completed</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#ffedd5; color:#9a3412;"><span class="material-symbols-outlined">local_shipping</span></div>
+                <div><div class="value">{{ summary.ongoing }}</div><div class="label">Active Now</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#fee2e2; color:#991b1b;"><span class="material-symbols-outlined">cancel</span></div>
+                <div><div class="value">{{ summary.cancelled }}</div><div class="label">Cancelled</div></div>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <input type="text" id="tripSearch" class="search-bar" placeholder="Search by PNR, Customer, or Driver..." onkeyup="filterTrips()">
+            <select id="statusFilter" class="filter-select" onchange="filterTrips()">
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table" id="tripTable">
+                <thead>
+                    <tr>
+                        <th>PNR & Date</th>
+                        <th>Route</th>
+                        <th>Customer</th>
+                        <th>Driver</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in trips %}
+                    <tr data-status="{{ t.status }}">
+                        <td>
+                            <strong style="color:var(--primary-color);">{{ t.pnr_number or '--'}}</strong><br>
+                            <span style="font-size:0.8rem; color:#6b7280;">{{ t.formatted_date }}</span>
+                        </td>
+                        <td>
+                            <div style="font-size:0.9rem; max-width:200px; white-space:normal;">
+                                <span style="color:green;">&#9679;</span> {{ t.pickup_location.split(',')[0] }}<br>
+                                <span style="color:red;">&#9679;</span> {{ t.drop_location.split(',')[0] }}
+                            </div>
+                        </td>
+                        <td>{{ t.customer_name }}</td>
+                        <td>{{ t.driver_name }}</td>
+                        <td><span class="status-badge status-{{ t.status }}">{{ t.status }}</span></td>
+                        <td><strong>₹ {{ t.total_fare or t.fare }}</strong></td>
+                        <td>
+                            <button class="btn-view" onclick='viewTrip({{ t|tojson }})'>View Details</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="tripModal" class="modal-overlay">
+        <div class="modal-content-wide">
+            <div class="modal-header">
+                <h2 class="modal-title">Trip Details <span id="mPnr" style="color:var(--primary-color);"></span></h2>
+                <button onclick="closeModal()" style="border:none; background:none; font-size:2rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="route-visual">
+                    <div class="route-point">
+                        <span class="rp-label">Pickup Location</span>
+                        <div class="rp-val" id="mPickup"></div>
+                    </div>
+                    <span class="material-symbols-outlined route-arrow">arrow_forward</span>
+                    <div class="route-point" style="text-align:right;">
+                        <span class="rp-label">Drop Location</span>
+                        <div class="rp-val" id="mDrop"></div>
+                    </div>
+                </div>
+
+                <div class="trip-detail-grid">
+                    <div class="detail-group">
+                        <h3>Customer Information</h3>
+                        <div class="info-row"><span>Name</span><span id="mCustName"></span></div>
+                        <div class="info-row"><span>Phone</span><span id="mCustPhone"></span></div>
+                        <div class="info-row"><span>Email</span><span id="mCustEmail"></span></div>
+                    </div>
+                    <div class="detail-group">
+                        <h3>Driver Information</h3>
+                        <div class="info-row"><span>Name</span><span id="mDrvName"></span></div>
+                        <div class="info-row"><span>Vehicle</span><span id="mDrvVehicle"></span></div>
+                        <div class="info-row"><span>Phone</span><span id="mDrvPhone"></span></div>
+                    </div>
+                    <div class="detail-group">
+                        <h3>Payment Details</h3>
+                        <div class="info-row"><span>Base Fare</span><span id="mBaseFare"></span></div>
+                        <div class="info-row"><span>Toll Tax</span><span id="mToll"></span></div>
+                        <div class="info-row"><span>Total Amount</span><span id="mTotal" style="color:green; font-size:1.1rem;"></span></div>
+                        <div class="info-row"><span>Method</span><span id="mMethod"></span></div>
+                    </div>
+                    <div class="detail-group">
+                        <h3>Trip Status</h3>
+                        <div class="info-row"><span>Current Status</span><span id="mStatus"></span></div>
+                        <div class="info-row"><span>Booking Time</span><span id="mTime"></span></div>
+                        <div class="info-row"><span>Rating</span><span id="mRating"></span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="cancelTripBtn" class="btn-cancel">Cancel Trip (Emergency)</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon" id="confirmIcon">
+            <span class="material-symbols-outlined">warning</span>
+        </div>
+        <h3 class="confirm-title" id="confirmTitle">Are you sure?</h3>
+        <p class="confirm-desc" id="confirmDesc">Do you really want to perform this action?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel-modal" onclick="closeConfirm()">Cancel</button>
+            <button class="confirm-btn btn-confirm-modal" id="confirmYesBtn">Yes, Proceed</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+
+        // --- Custom Modal Logic ---
+function showConfirm(title, message, callback, type = 'danger') {
+    const modal = document.getElementById('customConfirmModal');
+    const iconBox = document.getElementById('confirmIcon');
+    const iconSpan = iconBox.querySelector('span');
+    const yesBtn = document.getElementById('confirmYesBtn');
+
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmDesc').innerText = message;
+
+    if (type === 'danger') {
+        iconBox.style.background = '#fee2e2';
+        iconBox.style.color = '#dc2626';
+        iconSpan.innerText = 'warning';
+        yesBtn.style.background = '#dc2626';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)';
+        yesBtn.innerText = "Yes, Delete";
+    } else if (type === 'success') {
+        iconBox.style.background = '#dcfce7';
+        iconBox.style.color = '#166534';
+        iconSpan.innerText = 'check_circle';
+        yesBtn.style.background = '#166534';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(22, 101, 52, 0.3)';
+        yesBtn.innerText = "Yes, Activate";
+    } else { // Warning/Suspend
+        iconBox.style.background = '#fff7ed';
+        iconBox.style.color = '#c2410c';
+        iconSpan.innerText = 'block';
+        yesBtn.style.background = '#c2410c';
+        yesBtn.style.boxShadow = 'none';
+        yesBtn.innerText = "Yes, Suspend";
+    }
+
+    yesBtn.onclick = function() {
+        callback();
+        closeConfirm();
+    };
+
+    modal.classList.add('active');
+}
+
+function closeConfirm() {
+    document.getElementById('customConfirmModal').classList.remove('active');
+}
+        function filterTrips() {
+            let input = document.getElementById('tripSearch').value.toUpperCase();
+            let status = document.getElementById('statusFilter').value;
+            let rows = document.getElementById('tripTable').getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                let text = rows[i].textContent.toUpperCase();
+                let rowStatus = rows[i].getAttribute('data-status');
+                
+                let matchesSearch = text.indexOf(input) > -1;
+                let matchesStatus = status === 'All' || rowStatus === status;
+
+                rows[i].style.display = (matchesSearch && matchesStatus) ? "" : "none";
+            }
+        }
+
+        function viewTrip(t) {
+            // Display '--' if PNR is not generated yet (i.e., status is Pending)
+            if (t.pnr_number) {
+                document.getElementById('mPnr').textContent = "#" + t.pnr_number;
+            } else {
+                document.getElementById('mPnr').textContent = "--";
+            }
+            document.getElementById('mPickup').textContent = t.pickup_location;
+            document.getElementById('mDrop').textContent = t.drop_location;
+            
+            // Customer
+            document.getElementById('mCustName').textContent = t.customer_name || 'N/A';
+            document.getElementById('mCustPhone').textContent = t.customer_phone || 'N/A';
+            document.getElementById('mCustEmail').textContent = t.customer_email;
+
+            // Driver
+            document.getElementById('mDrvName').textContent = t.driver_name;
+            document.getElementById('mDrvVehicle').textContent = t.vehicle_reg_no;
+            document.getElementById('mDrvPhone').textContent = t.driver_phone;
+
+            // Payment
+            let base = t.fare.split('+')[0];
+            document.getElementById('mBaseFare').textContent = base;
+            document.getElementById('mToll').textContent = "₹ " + (t.toll_tax || 0);
+            document.getElementById('mTotal').textContent = "₹ " + (t.total_fare || base);
+            document.getElementById('mMethod').textContent = t.payment_method;
+
+            // Status
+            document.getElementById('mStatus').textContent = t.status;
+            document.getElementById('mTime').textContent = t.formatted_date;
+            document.getElementById('mRating').textContent = t.rating ? t.rating + " Stars" : "Not Rated";
+
+           // Cancel Button Logic
+let btn = document.getElementById('cancelTripBtn');
+if(t.status === 'Completed' || t.status === 'Cancelled') {
+    btn.style.display = 'none';
+} else {
+    btn.style.display = 'inline-block';
+    // IMPORTANT: Remove the old onclick and href
+    btn.removeAttribute('href'); 
+    btn.onclick = function() { 
+        showConfirm(
+            "Force Cancel Trip?", 
+            "Are you sure you want to cancel this trip immediately? The driver and customer will be notified.", 
+            () => window.location.href = `/admin/cancel_trip/${t.id}`,
+            'danger'
+        );
+    };
+}
+
+            document.getElementById('tripModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tripModal').classList.remove('active');
+        }
+
+        // Auto-dismiss alerts after 4 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.transition = "opacity 0.5s ease";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 4000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Registration - QuickLoad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+   
+    <style>
+      :root {
+        --primary-color: #5ca7a8; /* Teal color from your image */
+        --error-color: #d62828;
+        --text-light: rgba(255, 255, 255, 0.85);
+        --border-color: rgba(255, 255, 255, 0.25);
+        --input-bg: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Poppins", "Segoe UI", sans-serif;
+        min-height: 100vh;
+        background: url("{{ url_for('static', filename='images/register-bg.png') }}")
+          center/cover no-repeat;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        color: white;
+      }
+
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+      }
+
+      /* --- HEADER --- */
+      .page-header {
+        padding: 20px 40px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 10;
+      }
+      .logo img {
+        height: 60px;
+        width: auto;
+      }
+
+      /* --- MAIN CONTENT & FORM CONTAINER --- */
+      .main-content {
+        flex: 1 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 120px 20px 40px 20px;
+      }
+
+      .driver-form-container {
+        background: rgba(20, 20, 20, 0.3);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 900px; /* Wider container for driver details */
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      }
+
+      .form-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        background: linear-gradient(90deg, #fff, var(--primary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* --- PROGRESS BAR --- */
+      .progress-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        position: relative;
+      }
+      .progress-bar::before {
+        content: "";
+        position: absolute;
+        top: 20px; /* Positioned at the icon's center */
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--border-color);
+        /* transform: translateY(-50%); -- This line is removed */
+        z-index: 1;
+      }
+      .progress-line {
+        position: absolute;
+        top: 20px; /* Positioned at the icon's center */
+        left: 0;
+        height: 2px;
+        background-color: #22c55e; /* Match the green icon color */
+        /* transform: translateY(-50%); -- This line is removed */
+        z-index: 2;
+        width: 0%;
+        transition: width 0.4s ease;
+      }
+      .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 3;
+        width: 100px;
+      }
+      .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #333;
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s ease;
+      }
+      .step-label {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        transition: all 0.4s ease;
+        text-align: center;
+      }
+      .progress-step.active .step-icon {
+        /*background-color: var(--primary-color);
+        border-color: var(--primary-color);*/
+        background-color: #22c55e; /* Changed to green */
+        border-color: #22c55e; /* Changed to green */
+        transform: scale(1.1);
+      }
+      .progress-step.active .step-label {
+        color: white;
+        font-weight: 600;
+      }
+
+      /* --- FORM STEPS & GRIDS --- */
+      .form-step {
+        display: none;
+      }
+      .form-step.active {
+        display: block;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .step-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px 25px;
+      }
+      .grid-col-full {
+        grid-column: 1 / -1;
+      }
+
+      /* --- FORM ELEMENTS --- */
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-label {
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-light);
+      }
+      .form-input,
+      .form-select {
+        width: 100%;
+        padding: 12px 15px;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+      .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .form-input:focus,
+      .form-select:focus {
+        border-color: var(--primary-color);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(92, 167, 168, 0.3);
+      }
+      .form-input.is-invalid {
+        border-color: var(--error-color);
+      }
+      .form-select option {
+        background-color: #333;
+        color: white;
+      }
+
+      /* --- FILE UPLOAD STYLES --- */
+      .file-upload-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .file-input-group {
+        position: relative;
+        flex-grow: 1;
+      }
+      .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 15px;
+        background: var(--input-bg);
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .file-input-label:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(92, 167, 168, 0.1);
+      }
+      .file-input {
+        position: absolute;
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        z-index: -1;
+      }
+      .file-preview {
+        width: 60px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: #333;
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-light);
+        font-size: 0.7rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+      .file-name {
+        font-size: 0.9rem;
+        margin-left: 10px;
+        color: var(--text-light);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* --- NAVIGATION BUTTONS --- */
+      .form-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+      }
+      /* Base style for all navigation buttons */
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px; /* Increased gap for icon */
+        padding: 14px 32px; /* Increased padding */
+        border: 2px solid transparent;
+        border-radius: 50px;
+        font-size: 1.1rem; /* Increased font size */
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      /* Style for "Back" button */
+      .back-btn {
+        background: transparent;
+        border-color: var(--border-color); /* Use your theme's border color */
+        color: white;
+      }
+      .back-btn:hover {
+        background-color: var(--input-bg);
+        border-color: #5ca7a8; /* Highlight with primary color on hover */
+      }
+      /* Adds a left-arrow icon */
+      .back-btn::before {
+        content: "\2190"; /* Same arrow, but we'll flip it */
+        transform: rotate(180deg);
+        font-size: 1.1em;
+        transition: transform 0.3s ease;
+      }
+      .back-btn:hover::before {
+        transform: rotate(180deg) translateX(5px);
+      }
+      /* Style for "Next" and "Submit" buttons */
+      .next-btn,
+      .submit-btn {
+        background: linear-gradient(45deg, #22c55e, #5ca7a8);
+        color: white;
+        background-size: 200% auto; /* For the moving gradient effect */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      .next-btn:hover,
+      .submit-btn:hover {
+        background-position: right center; /* Moves the gradient on hover */
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+      /* Adds a right-arrow icon */
+      .next-btn::after,
+      .submit-btn::after {
+        content: "\2192"; /* Unicode for a heavy right arrow */
+        font-size: 1.1em;
+        transition: transform 0.3s ease;
+      }
+      .next-btn:hover::after,
+      .submit-btn:hover::after {
+        transform: translateX(5px);
+      }
+      .back-btn[disabled] {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      /* Error Messages */
+      .error-message {
+        color: var(--error-color);
+        font-size: 0.8rem;
+        padding-top: 5px;
+        min-height: 1.2em;
+        display: none;
+      }
+      .error-message.visible {
+        display: block;
+      }
+
+      /* --- FOOTER --- */
+      .footer-strip {
+        flex-shrink: 0;
+        background-color: rgba(10, 10, 10, 0.7);
+        padding: 15px 40px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        text-align: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* --- RESPONSIVENESS --- */
+      @media (max-width: 768px) {
+        .driver-form-container {
+          padding: 20px;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .form-title {
+          font-size: 2rem;
+        }
+        .step-label {
+          display: none; /* Hide labels on mobile to save space */
+        }
+        .progress-bar {
+          margin-bottom: 2rem;
+        }
+        .page-header {
+          padding: 15px;
+          display: flex;
+          justify-content: center;
+        }
+        .logo img {
+          height: 50px;
+        }
+      }
+      .required-asterisk {
+        color: #ef4444; /* A bright red color */
+        margin-left: 4px;
+        font-weight: bold;
+        font-size: 1.2rem; /* Add this line to increase the size */
+      }
+
+      /* STYLES FOR THE NEW REVIEW STEP */
+      .review-section {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.5rem;
+      }
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .review-header h3 {
+        font-weight: 500;
+        font-size: 1.1rem;
+      }
+      .edit-btn {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+      .review-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.5rem;
+      }
+      .review-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .review-item .label {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 4px;
+      }
+      .review-item .value {
+        font-weight: 500;
+        word-break: break-all;
+      }
+      .review-item.full-width {
+        grid-column: 1 / -1;
+      }
+
+      /* STYLES FOR DIVIDER AND CHECKBOXES */
+      .form-divider {
+        border: none;
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 2rem 0;
+      }
+      .form-group-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 1rem;
+      }
+      .form-group-checkbox input[type="checkbox"] {
+        margin-top: 4px;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary-color);
+      }
+      .form-group-checkbox label {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        line-height: 1.5;
+      }
+      .form-group-checkbox a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .form-group-checkbox a:hover {
+        text-decoration: underline;
+      }
+
+      /* STYLES FOR TERMS & CONDITIONS MODAL */
+      .terms-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      .terms-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .terms-modal-content {
+        background: #2d2d2d;
+        color: var(--text-light);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      }
+      .terms-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+      .terms-modal-header h2 {
+        font-size: 1.25rem;
+        color: white;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 2rem;
+        font-weight: 300;
+        color: var(--text-light);
+        cursor: pointer;
+      }
+      .terms-modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+      }
+      .terms-modal-body h4 {
+        color: var(--primary-color);
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .terms-modal-body p {
+        line-height: 1.7;
+        margin-bottom: 1rem;
+      }
+
+      /* --- Flash Message Notification Styles --- */
+      .flash-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 90%;
+          max-width: 400px;
+          z-index: 9999;
+      }
+
+      .alert {
+          padding: 12px 20px;
+          border-radius: 8px;
+          margin-bottom: 10px;
+          font-size: 0.95rem;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          animation: slideDown 0.3s ease-out;
+          background: white;
+          color: #333; /* Default text color */
+      }
+
+      .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+      .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+      .alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+      .close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+      .close-btn:hover { opacity: 1; }
+
+      @keyframes slideDown {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <a href="/" class="logo">
+        <img
+          src="{{ url_for('static', filename='images/logo-bg.png') }}"
+          alt="QuickLoad Logo"
+        />
+      </a>
+    </header>
+
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                      <span>{{ message }}</span>
+                      <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                  </div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="main-content">
+      <div class="driver-form-container">
+        <h1 class="form-title">Become a QuickLoad Driver Partner</h1>
+
+        <div class="progress-bar">
+          <div class="progress-line"></div>
+          <div class="progress-step active">
+            <div class="step-icon">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="step-label">Personal</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-icon">
+              <span class="material-symbols-outlined">local_shipping</span>
+            </div>
+            <div class="step-label">Vehicle</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-icon">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+            <div class="step-label">Documents</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-icon">
+              <span class="material-symbols-outlined">account_balance</span>
+            </div>
+            <div class="step-label">Bank</div>
+          </div>
+          <div class="progress-step">
+            <div class="step-icon">
+              <span class="material-symbols-outlined">preview</span>
+            </div>
+            <div class="step-label">Review & Submit</div>
+          </div>
+        </div>
+
+        <form
+          id="driver-registration-form"
+          method="POST"
+          action="/driver_register"
+          enctype="multipart/form-data"
+          novalidate
+        >
+          <div class="form-step active">
+            <h2 class="step-title">
+              <span class="material-symbols-outlined">badge</span>Personal
+              Information
+            </h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="fullName" class="form-label"
+                  >Full Name<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  class="form-input"
+                  placeholder="As per your Aadhaar Card"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="dob" class="form-label"
+                  >Date of Birth<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="date"
+                  id="dob"
+                  name="dob"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="contactNumber" class="form-label"
+                  >Contact Number<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="tel"
+                  id="contactNumber"
+                  name="contactNumber"
+                  class="form-input"
+                  placeholder="10-digit mobile number"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="email" class="form-label"
+                  >Email Address<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  class="form-input"
+                  placeholder="example@email.com"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group grid-col-full">
+                <label for="address" class="form-label"
+                  >Full Address<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  class="form-input"
+                  placeholder="Street Address, Area"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="city" class="form-label"
+                  >City<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="pincode" class="form-label"
+                  >Pincode<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="pincode"
+                  name="pincode"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group grid-col-full">
+                <label for="profilePhoto" class="form-label"
+                  >Upload Profile Photo<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="profilePhotoPreview">...</div>
+                  <div class="file-input-group">
+                    <label for="profilePhoto" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="profilePhotoName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="profilePhoto"
+                      name="profilePhoto"
+                      class="file-input"
+                      accept="image/*"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="back-btn" disabled>Back</button>
+              <button type="button" class="next-btn">Next</button>
+            </div>
+          </div>
+
+          <div class="form-step">
+            <h2 class="step-title">
+              <span class="material-symbols-outlined">local_shipping</span
+              >Vehicle & License Details
+            </h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="licenseNumber" class="form-label"
+                  >Driving License Number<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="text"
+                  id="licenseNumber"
+                  name="licenseNumber"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="licenseExpiry" class="form-label"
+                  >License Expiry Date<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="date"
+                  id="licenseExpiry"
+                  name="licenseExpiry"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="vehicleType" class="form-label"
+                  >Vehicle Type<span class="required-asterisk">*</span></label
+                >
+                <select
+                  id="vehicleType"
+                  name="vehicleType"
+                  class="form-select"
+                  required
+                >
+                  <option value="">Select a Vehicle</option>
+                  <option value="3-wheeler">3-Wheeler</option>
+                  <option value="mini-truck">Mini Truck</option>
+                  <option value="pickup">Pickup</option>
+                  <option value="tempo">Tempo</option>
+                  <option value="truck">Truck</option>
+                </select>
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="vehicleModel" class="form-label"
+                  >Vehicle Model<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="vehicleModel"
+                  name="vehicleModel"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="vehicleRegNo" class="form-label"
+                  >Vehicle Registration No.<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="text"
+                  id="vehicleRegNo"
+                  name="vehicleRegNo"
+                  class="form-input"
+                  placeholder="e.g., TN 01 AB 1234"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="hasInsurance" class="form-label"
+                  >Do you have vehicle insurance?<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <select
+                  id="hasInsurance"
+                  name="hasInsurance"
+                  class="form-select"
+                  required
+                >
+                  <option value="">Select an option</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+                <div class="error-message"></div>
+              </div>
+              <div
+                class="form-grid grid-col-full"
+                id="insuranceDetailsGroup"
+                style="display: none"
+              >
+                <div class="form-group">
+                  <label for="insuranceNumber" class="form-label"
+                    >Insurance Policy Number<span class="required-asterisk"
+                      >*</span
+                    ></label
+                  >
+                  <input
+                    type="text"
+                    id="insuranceNumber"
+                    name="insuranceNumber"
+                    class="form-input"
+                  />
+                  <div class="error-message"></div>
+                </div>
+                <div class="form-group">
+                  <label for="insuranceExpiry" class="form-label"
+                    >Insurance Expiry Date<span class="required-asterisk"
+                      >*</span
+                    ></label
+                  >
+                  <input
+                    type="date"
+                    id="insuranceExpiry"
+                    name="insuranceExpiry"
+                    class="form-input"
+                  />
+                  <div class="error-message"></div>
+                </div>
+              </div>
+
+              <div class="form-group grid-col-full">
+                <label for="vehiclePhoto" class="form-label"
+                  >Upload Vehicle Photo<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="vehiclePhotoPreview">...</div>
+                  <div class="file-input-group">
+                    <label for="vehiclePhoto" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="vehiclePhotoName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="vehiclePhoto"
+                      name="vehiclePhoto"
+                      class="file-input"
+                      accept="image/*"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="back-btn">Back</button>
+              <button type="button" class="next-btn">Next</button>
+            </div>
+          </div>
+
+          <div class="form-step">
+            <h2 class="step-title">
+              <span class="material-symbols-outlined">description</span>Document
+              Uploads
+            </h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="drivingLicense" class="form-label"
+                  >Driving License (PDF only)<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="drivingLicensePreview">...</div>
+                  <div class="file-input-group">
+                    <label for="drivingLicense" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="drivingLicenseName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="drivingLicense"
+                      name="drivingLicense"
+                      class="file-input"
+                      accept="application/pdf"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="aadhaar" class="form-label"
+                  >Aadhaar Card (PDF only)<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="aadhaarPreview">...</div>
+                  <div class="file-input-group">
+                    <label for="aadhaar" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="aadhaarName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="aadhaar"
+                      name="aadhaar"
+                      class="file-input"
+                      accept="application/pdf"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="pan" class="form-label"
+                  >PAN Card (PDF only)<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="panPreview">...</div>
+                  <div class="file-input-group">
+                    <label for="pan" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="panName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="pan"
+                      name="pan"
+                      class="file-input"
+                      accept="application/pdf"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="rc" class="form-label"
+                  >Vehicle RC (PDF only)<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <div class="file-upload-wrapper">
+                  <div class="file-preview" id="rcPreview">...</div>
+                  <div class="file-input-group">
+                    <label for="rc" class="file-input-label">
+                      <span class="material-symbols-outlined">upload</span>
+                      <span>Choose file</span>
+                      <span class="file-name" id="rcName"></span>
+                    </label>
+                    <input
+                      type="file"
+                      id="rc"
+                      name="rc"
+                      class="file-input"
+                      accept="application/pdf"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="error-message"></div>
+              </div>
+              <div id="insuranceUploadGroup" style="display: none">
+                <div class="form-group">
+                  <label for="insurance" class="form-label"
+                    >Insurance Certificate (PDF only)<span
+                      class="required-asterisk"
+                      >*</span
+                    ></label
+                  >
+                  <div class="file-upload-wrapper">
+                    <div class="file-preview" id="insurancePreview">...</div>
+                    <div class="file-input-group">
+                      <label for="insurance" class="file-input-label">
+                        <span class="material-symbols-outlined">upload</span>
+                        <span>Choose file</span>
+                        <span class="file-name" id="insuranceName"></span>
+                      </label>
+                      <input
+                        type="file"
+                        id="insurance"
+                        name="insurance"
+                        class="file-input"
+                        accept="application/pdf"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="error-message"></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="back-btn">Back</button>
+              <button type="button" class="next-btn">Next</button>
+            </div>
+          </div>
+
+          <div class="form-step">
+            <h2 class="step-title">
+              <span class="material-symbols-outlined">account_balance</span>Bank
+              Details & Account Setup
+            </h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="accHolderName" class="form-label"
+                  >Account Holder Name<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="text"
+                  id="accHolderName"
+                  name="accHolderName"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="accNumber" class="form-label"
+                  >Account Number<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="accNumber"
+                  name="accNumber"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="ifsc" class="form-label"
+                  >IFSC Code<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="ifsc"
+                  name="ifsc"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="bankName" class="form-label"
+                  >Bank Name<span class="required-asterisk">*</span></label
+                >
+                <input
+                  type="text"
+                  id="bankName"
+                  name="bankName"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="password" class="form-label"
+                  >Create Password<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword" class="form-label"
+                  >Confirm Password<span class="required-asterisk"
+                    >*</span
+                  ></label
+                >
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  class="form-input"
+                  required
+                />
+                <div class="error-message"></div>
+              </div>
+            </div>
+            <div class="form-navigation">
+              <button type="button" class="back-btn">Back</button>
+              <button type="button" class="next-btn">Review Details</button>
+            </div>
+          </div>
+
+          <div class="form-step">
+            <h2 class="step-title">
+              <span class="material-symbols-outlined">preview</span>Review Your
+              Application
+            </h2>
+            <p
+              style="
+                margin-bottom: 2rem;
+                color: var(--text-light);
+                font-size: 0.9rem;
+              "
+            >
+              Please review all your details carefully before final submission.
+              Click the edit icon to make changes.
+            </p>
+
+            <div class="review-section">
+              <div class="review-header">
+                <h3>Personal Information</h3>
+                <button type="button" class="edit-btn" data-step="0">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+              </div>
+              <div class="review-grid">
+                <div class="review-item">
+                  <span class="label">Full Name</span>
+                  <span class="value" id="reviewFullName"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Date of Birth</span>
+                  <span class="value" id="reviewDob"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Contact Number</span>
+                  <span class="value" id="reviewContact"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Email Address</span>
+                  <span class="value" id="reviewEmail"></span>
+                </div>
+                <div class="review-item full-width">
+                  <span class="label">Address</span>
+                  <span class="value" id="reviewAddress"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-section">
+              <div class="review-header">
+                <h3>Vehicle & License</h3>
+                <button type="button" class="edit-btn" data-step="1">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+              </div>
+              <div class="review-grid">
+                <div class="review-item">
+                  <span class="label">License Number</span>
+                  <span class="value" id="reviewLicenseNo"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">License Expiry</span>
+                  <span class="value" id="reviewLicenseExpiry"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Vehicle Type</span>
+                  <span class="value" id="reviewVehicleType"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Vehicle Model</span>
+                  <span class="value" id="reviewVehicleModel"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Registration No.</span>
+                  <span class="value" id="reviewVehicleRegNo"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Has Insurance?</span>
+                  <span class="value" id="reviewHasInsurance"></span>
+                </div>
+                <div id="reviewInsuranceDetails" style="display: none">
+                  <div class="review-item">
+                    <span class="label">Policy Number</span>
+                    <span class="value" id="reviewInsuranceNo"></span>
+                  </div>
+                  <div class="review-item">
+                    <span class="label">Policy Expiry</span>
+                    <span class="value" id="reviewInsuranceExpiry"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-section">
+              <div class="review-header">
+                <h3>Uploaded Documents</h3>
+                <button type="button" class="edit-btn" data-step="2">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+              </div>
+              <div class="review-grid">
+                <div class="review-item">
+                  <span class="label">Profile Photo</span>
+                  <span class="value">
+                    <a href="#" id="reviewProfilePhotoLink" target="_blank"></a>
+                  </span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Vehicle Photo</span>
+                  <span class="value">
+                    <a href="#" id="reviewVehiclePhotoLink" target="_blank"></a>
+                  </span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Driving License</span>
+                  <span class="value">
+                    <a
+                      href="#"
+                      id="reviewDrivingLicenseLink"
+                      target="_blank"
+                    ></a>
+                  </span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Aadhaar Card</span>
+                  <span class="value">
+                    <a href="#" id="reviewAadhaarLink" target="_blank"></a>
+                  </span>
+                </div>
+                <div class="review-item">
+                  <span class="label">PAN Card</span>
+                  <span class="value">
+                    <a href="#" id="reviewPanLink" target="_blank"></a>
+                  </span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Vehicle RC</span>
+                  <span class="value">
+                    <a href="#" id="reviewRcLink" target="_blank"></a>
+                  </span>
+                </div>
+                <div
+                  id="reviewInsuranceDoc"
+                  class="review-item"
+                  style="display: none"
+                >
+                  <span class="label">Insurance Cert.</span>
+                  <span class="value">
+                    <a href="#" id="reviewInsuranceLink" target="_blank"></a>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-section">
+              <div class="review-header">
+                <h3>Bank Details</h3>
+                <button type="button" class="edit-btn" data-step="3">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+              </div>
+              <div class="review-grid">
+                <div class="review-item">
+                  <span class="label">Account Holder Name</span>
+                  <span class="value" id="reviewAccHolderName"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Bank Name</span>
+                  <span class="value" id="reviewBankName"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">Account Number</span>
+                  <span class="value" id="reviewAccNumber"></span>
+                </div>
+                <div class="review-item">
+                  <span class="label">IFSC Code</span>
+                  <span class="value" id="reviewIfsc"></span>
+                </div>
+              </div>
+            </div>
+
+            <hr class="form-divider" />
+
+            <div class="form-group-checkbox">
+              <input type="checkbox" id="terms" name="terms" required />
+              <label for="terms"
+                >I accept the
+                <a href="#" id="openTermsLink">Terms and Conditions</a>
+                <span class="required-asterisk">*</span></label
+              >
+            </div>
+            <div class="form-group-checkbox">
+              <input
+                type="checkbox"
+                id="declaration"
+                name="declaration"
+                required
+              />
+              <label for="declaration"
+                >I declare that the information and documents furnished in this
+                application are true to the best of my knowledge and belief. I
+                understand and agree that if any information is found to be
+                false or misleading, my application will be rejected, and any
+                existing partnership with QuickLoad may be terminated
+                immediately.<span class="required-asterisk">*</span></label
+              >
+            </div>
+            <div class="error-message" id="checkbox-error"></div>
+
+            <div class="form-navigation">
+              <button type="button" class="back-btn">Back</button>
+              <button type="submit" class="submit-btn nav-btn">
+                Submit Application
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="termsModal" class="terms-modal-overlay">
+      <div class="terms-modal-content">
+        <div class="terms-modal-header">
+          <h2>Terms and Conditions</h2>
+          <button id="closeTermsModal" class="close-btn">&times;</button>
+        </div>
+        <div class="terms-modal-body">
+          <h4>1. Introduction</h4>
+          <p>
+            Welcome to QuickLoad. These terms and conditions outline the rules
+            and regulations for the use of QuickLoad's Platform. By accessing
+            this platform we assume you accept these terms and conditions. Do
+            not continue to use QuickLoad if you do not agree to take all of
+            the terms and conditions stated on this page.
+          </p>
+          <h4>2. Driver Partner Obligations</h4>
+          <p>
+            As a Driver Partner, you certify that you possess a valid driver's
+            license, vehicle registration, and all necessary permits required to
+            operate your vehicle for commercial purposes in your jurisdiction.
+            You agree to maintain your vehicle in a clean, safe, and operable
+            condition at all times.
+          </p>
+          <h4>3. Data Accuracy</h4>
+          <p>
+            You declare that all information and documentation provided during
+            this registration process are true, accurate, and current. You
+            understand that QuickLoad will conduct background and document
+            verification based on this information. Any false or misleading
+            information may result in the immediate rejection of your
+            application or termination of your partnership.
+          </p>
+          <h4>4. Service Standards</h4>
+          <p>
+            You agree to provide services to customers in a professional,
+            courteous, and timely manner. You will adhere to all traffic laws
+            and safety regulations. You are responsible for any fines,
+            penalties, or liabilities incurred while providing services on the
+            QuickLoad platform.
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+            aliquip ex ea commodo consequat.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer-strip">
+      <p>Copyright &copy; 2025 QuickLoad. All rights reserved.</p>
+    </footer>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const steps = Array.from(document.querySelectorAll(".form-step"));
+        const nextBtns = document.querySelectorAll(".next-btn");
+        const backBtns = document.querySelectorAll(".back-btn");
+        const form = document.getElementById("driver-registration-form");
+        const progressSteps = document.querySelectorAll(".progress-step");
+        const progressLine = document.querySelector(".progress-line");
+        const insuranceSelect = document.getElementById("hasInsurance");
+        const insuranceDetailsGroup = document.getElementById(
+          "insuranceDetailsGroup"
+        );
+        const insuranceUploadGroup = document.getElementById(
+          "insuranceUploadGroup"
+        );
+
+        let currentStep = 0;
+
+        const updateProgress = () => {
+          progressSteps.forEach((step, idx) => {
+            if (idx <= currentStep) {
+              step.classList.add("active");
+            } else {
+              step.classList.remove("active");
+            }
+          });
+          const progressWidth = (currentStep / (steps.length - 1)) * 100;
+          progressLine.style.width = `${progressWidth}%`;
+        };
+
+        const showStep = (stepIndex) => {
+          steps.forEach((step, index) => {
+            step.classList.toggle("active", index === stepIndex);
+          });
+          currentStep = stepIndex;
+          updateProgress();
+        };
+
+        const getFileName = (inputId) => {
+          const input = document.getElementById(inputId);
+          return input.files.length > 0 ? input.files[0].name : "Not provided";
+        };
+
+        const populateReviewStep = () => {
+          // Personal
+          document.getElementById("reviewFullName").textContent =
+            document.getElementById("fullName").value;
+          document.getElementById("reviewDob").textContent =
+            document.getElementById("dob").value;
+          document.getElementById("reviewContact").textContent =
+            document.getElementById("contactNumber").value;
+          document.getElementById("reviewEmail").textContent =
+            document.getElementById("email").value;
+          const fullAddress = `${document.getElementById("address").value}, ${
+            document.getElementById("city").value
+          }, ${document.getElementById("pincode").value}`;
+          document.getElementById("reviewAddress").textContent = fullAddress;
+
+          // Vehicle
+          document.getElementById("reviewLicenseNo").textContent =
+            document.getElementById("licenseNumber").value;
+          document.getElementById("reviewLicenseExpiry").textContent =
+            document.getElementById("licenseExpiry").value;
+          document.getElementById("reviewVehicleType").textContent =
+            document.getElementById("vehicleType").value;
+          document.getElementById("reviewVehicleModel").textContent =
+            document.getElementById("vehicleModel").value;
+          document.getElementById("reviewVehicleRegNo").textContent =
+            document.getElementById("vehicleRegNo").value;
+          const hasInsurance = document.getElementById("hasInsurance").value;
+          document.getElementById("reviewHasInsurance").textContent =
+            hasInsurance === "yes" ? "Yes" : "No";
+
+          const reviewInsuranceDetails = document.getElementById(
+            "reviewInsuranceDetails"
+          );
+          const reviewInsuranceDoc =
+            document.getElementById("reviewInsuranceDoc");
+
+          if (hasInsurance === "yes") {
+            reviewInsuranceDetails.style.display = "contents";
+            reviewInsuranceDoc.style.display = "flex";
+            document.getElementById("reviewInsuranceNo").textContent =
+              document.getElementById("insuranceNumber").value;
+            document.getElementById("reviewInsuranceExpiry").textContent =
+              document.getElementById("insuranceExpiry").value;
+            //document.getElementById("reviewInsurance").textContent =
+            //  getFileName("insurance");
+          } else {
+            reviewInsuranceDetails.style.display = "none";
+            reviewInsuranceDoc.style.display = "none";
+          }
+
+          // Documents
+          //document.getElementById("reviewProfilePhoto").textContent =
+          //  getFileName("profilePhoto");
+          //document.getElementById("reviewVehiclePhoto").textContent =
+          //  getFileName("vehiclePhoto");
+          //document.getElementById("reviewDrivingLicense").textContent =
+          //  getFileName("drivingLicense");
+          // document.getElementById("reviewAadhaar").textContent =
+          //  getFileName("aadhaar");
+          //document.getElementById("reviewPan").textContent = getFileName("pan");
+          //document.getElementById("reviewRc").textContent = getFileName("rc");
+
+          // ADD THIS NEW BLOCK FOR BANK DETAILS
+          document.getElementById("reviewAccHolderName").textContent =
+            document.getElementById("accHolderName").value;
+          document.getElementById("reviewBankName").textContent =
+            document.getElementById("bankName").value;
+          document.getElementById("reviewAccNumber").textContent =
+            document.getElementById("accNumber").value;
+          document.getElementById("reviewIfsc").textContent =
+            document.getElementById("ifsc").value;
+          // Helper function to create and style the file hyperlink
+          const createFileLink = (inputId, linkId) => {
+            const input = document.getElementById(inputId);
+            const link = document.getElementById(linkId);
+
+            if (input.files.length > 0) {
+              const file = input.files[0];
+              const fileURL = URL.createObjectURL(file);
+              link.href = fileURL;
+              link.textContent = file.name;
+              link.style.color = "var(--primary-color)";
+              link.style.textDecoration = "underline";
+              link.style.fontWeight = "normal";
+            } else {
+              link.textContent = "Not provided";
+              link.href = "#";
+              link.style.color = "var(--text-light)";
+              link.style.textDecoration = "none";
+            }
+          };
+
+          // Documents
+          createFileLink("profilePhoto", "reviewProfilePhotoLink");
+          createFileLink("vehiclePhoto", "reviewVehiclePhotoLink");
+          createFileLink("drivingLicense", "reviewDrivingLicenseLink");
+          createFileLink("aadhaar", "reviewAadhaarLink");
+          createFileLink("pan", "reviewPanLink");
+          createFileLink("rc", "reviewRcLink");
+          //const hasInsurance = document.getElementById("hasInsurance").value;
+          if (hasInsurance === "yes") {
+            createFileLink("insurance", "reviewInsuranceLink");
+            document.getElementById("reviewInsuranceDoc").style.display =
+              "flex";
+          } else {
+            document.getElementById("reviewInsuranceDoc").style.display =
+              "none";
+          }
+        };
+
+        insuranceSelect.addEventListener("change", () => {
+          const insuranceFileInput = document.getElementById("insurance");
+          if (insuranceSelect.value === "yes") {
+            insuranceDetailsGroup.style.display = "grid";
+            insuranceDetailsGroup
+              .querySelectorAll("input")
+              .forEach((input) => (input.required = true));
+            insuranceUploadGroup.style.display = "block";
+            insuranceFileInput.required = true;
+          } else {
+            insuranceDetailsGroup.style.display = "none";
+            insuranceDetailsGroup.querySelectorAll("input").forEach((input) => {
+              input.required = false;
+              input.value = "";
+            });
+            insuranceUploadGroup.style.display = "none";
+            insuranceFileInput.required = false;
+          }
+        });
+
+        const validateStep = (stepIndex) => {
+          const currentStepFields =
+            steps[stepIndex].querySelectorAll("[required]");
+          let isValid = true;
+          currentStepFields.forEach((field) => {
+            const errorDiv =
+              field.closest(".form-group")?.querySelector(".error-message") ||
+              field
+                .closest(".file-upload-wrapper")
+                ?.parentElement.querySelector(".error-message");
+            if (!errorDiv) return;
+
+            if (
+              (field.type === "file" && field.files.length === 0) ||
+              (field.type !== "file" && field.value.trim() === "")
+            ) {
+              isValid = false;
+              errorDiv.textContent = "This field is required.";
+              errorDiv.classList.add("visible");
+              field.classList.add("is-invalid");
+            } else {
+              errorDiv.textContent = "";
+              errorDiv.classList.remove("visible");
+              field.classList.remove("is-invalid");
+            }
+          });
+          return isValid;
+        };
+
+        nextBtns.forEach((button) => {
+          button.addEventListener("click", () => {
+            if (validateStep(currentStep) && currentStep < steps.length - 1) {
+              if (currentStep === steps.length - 2) {
+                // If moving to the last (review) step
+                populateReviewStep();
+              }
+              currentStep++;
+              showStep(currentStep);
+            }
+          });
+        });
+
+        backBtns.forEach((button) => {
+          button.addEventListener("click", () => {
+            if (currentStep > 0) {
+              currentStep--;
+              showStep(currentStep);
+            }
+          });
+        });
+
+        // This is a new block to handle the edit buttons
+        document.querySelectorAll(".edit-btn").forEach((button) => {
+          button.addEventListener("click", (e) => {
+            const stepToGo = parseInt(e.currentTarget.dataset.step, 10);
+            showStep(stepToGo);
+          });
+        });
+
+        // --- Auto-dismiss alerts after 4 seconds ---
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 4000);
+
+        // REPLACE your entire form.addEventListener block with this one
+        // REPLACE your existing form.addEventListener with this simpler one
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          // --- Validation ---
+       
+          const termsCheckbox = document.getElementById("terms");
+          const declarationCheckbox = document.getElementById("declaration");
+          const checkboxErrorDiv = document.getElementById("checkbox-error");
+          let isValid = true;
+
+          if (!termsCheckbox.checked || !declarationCheckbox.checked) {
+            checkboxErrorDiv.textContent =
+              "You must accept the terms and provide the declaration.";
+            checkboxErrorDiv.classList.add("visible");
+            isValid = false;
+          } else {
+            checkboxErrorDiv.textContent = "";
+            checkboxErrorDiv.classList.remove("visible");
+          }
+      
+
+          // --- Submit if valid ---
+          if (isValid) {
+            const submitButton = form.querySelector(".submit-btn");
+            submitButton.disabled = true;
+            submitButton.textContent = "Submitting...";
+            form.submit();
+          }
+        });
+
+        const fileInputs = document.querySelectorAll(".file-input");
+        fileInputs.forEach((input) => {
+          input.addEventListener("change", () => {
+            const preview = document.getElementById(`${input.id}Preview`);
+            const nameDisplay = document.getElementById(`${input.id}Name`);
+            if (input.files && input.files[0]) {
+              const file = input.files[0];
+              nameDisplay.textContent = file.name;
+              if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  preview.style.backgroundImage = `url(${e.target.result})`;
+                  preview.textContent = "";
+                };
+                reader.readAsDataURL(file);
+              } else {
+                preview.style.backgroundImage = "none";
+                preview.textContent = "PDF";
+              }
+            }
+          });
+        });
+
+        showStep(currentStep);
+
+        // ADD THIS NEW BLOCK INSIDE THE DOMContentLoaded LISTENER
+        const termsModal = document.getElementById("termsModal");
+        const openTermsLink = document.getElementById("openTermsLink");
+        const closeTermsModal = document.getElementById("closeTermsModal");
+
+        openTermsLink.addEventListener("click", (e) => {
+          e.preventDefault(); // Prevents the link from navigating
+          termsModal.classList.add("active");
+        });
+
+        const closeTheTermsModal = () => {
+          termsModal.classList.remove("active");
+        };
+
+        closeTermsModal.addEventListener("click", closeTheTermsModal);
+        termsModal.addEventListener("click", (e) => {
+          if (e.target === termsModal) {
+            closeTheTermsModal();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

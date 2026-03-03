@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Navigation | QuickLoad Driver</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+        /* --- Layout: Left Info (35%) | Right Map (65%) --- */
+        .app-container {
+            display: grid;
+            grid-template-rows: 70px 1fr;
+            grid-template-columns: 35% 65%; 
+            height: 100vh;
+        }
+
+        /* --- Header --- */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 50;
+        }
+        .brand { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+/* Ensure the logo looks sharp and doesn't stretch */
+.brand img {
+    object-fit: contain;
+    max-width: 180px;
+}
+        .brand span { color: var(--primary); }
+        .live-status { display: flex; align-items: center; gap: 8px; color: var(--success); font-weight: 700; font-size: 0.9rem; }
+        .pulse-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+        /* --- Left Side: Trip Info --- */
+        .info-pane { 
+            grid-column: 1;
+            background: var(--bg); 
+            overflow-y: auto; 
+            padding: 2.5rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 2rem; 
+            border-right: 1px solid var(--border);
+        }
+        
+        .section-card { background: var(--surface); border-radius: 20px; padding: 1.5rem; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        
+        .customer-profile { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+        .avatar { width: 50px; height: 50px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-sub); }
+        
+        .route-timeline { display: flex; flex-direction: column; gap: 1.5rem; position: relative; padding-left: 10px; }
+        .timeline-item { display: flex; gap: 1rem; align-items: flex-start; }
+        .timeline-item h4 { font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 4px; font-weight: 700; }
+        .timeline-item p { font-weight: 600; font-size: 1rem; line-height: 1.4; }
+
+        .trip-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .stat-box { background: #f1f5f9; padding: 1rem; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .stat-val { display: block; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .finish-btn { 
+            width: 100%; padding: 1.25rem; background: var(--primary); color: white; 
+            border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 700; 
+            cursor: pointer; transition: 0.3s ease; margin-top: auto;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+        }
+        .finish-btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(220, 38, 38, 0.4); }
+
+        /* --- Right Side: Live Map --- */
+        .map-pane { grid-column: 2; position: relative; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* Floating Map Controls Wrapper */
+        .map-controls {
+            position: absolute; bottom: 30px; right: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            width: 50px; height: 50px; background: white;
+            border: none; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            cursor: pointer; color: var(--text-main);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .control-btn:hover { background: #f8fafc; color: var(--primary); transform: scale(1.05); }
+        .control-btn:active { transform: scale(0.95); }
+        .control-btn.recenter { border-radius: 50%; background: var(--text-main); color: white; margin-top: 5px; }
+        .control-btn.recenter:hover { background: var(--dark-color); color: white; }
+
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        /* Responsive Mobile Layout */
+        @media (max-width: 900px) {
+            .app-container { grid-template-columns: 1fr; grid-template-rows: 60px 45vh 1fr; }
+            .info-pane { grid-row: 3; padding: 1.5rem; border-right: none; border-top: 1px solid var(--border); }
+            .map-pane { grid-row: 2; }
+            .map-controls { bottom: 20px; right: 15px; }
+        }
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+@keyframes scaleUp {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="header">
+    <div class="brand">
+        <a href="{{ url_for('driver_dashboard') }}" style="text-decoration: none; display: flex; align-items: center; gap: 15px;">
+            <img src="{{ url_for('static', filename='images/VaahanSetu-Copy.png') }}" 
+                 alt="VaahanSetu Logo" 
+                 style="height: 45px; width: auto; display: block;">
+        </a>
+        
+        <div style="background: #f1f5f9; padding: 6px 15px; border-radius: 8px; font-size: 0.85rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; margin-left: 10px;">
+            <span style="color: var(--text-sub); font-weight: 600; text-transform: uppercase; font-size: 0.7rem;">Booking ID:</span> 
+            <span style="color: var(--text-main); font-weight: 800; letter-spacing: 0.5px;">{{ trip.pnr_number }}</span>
+        </div>
+    </div>
+    <div class="live-status">
+        <div class="pulse-dot"></div> ACTIVE TRIP
+    </div>
+</header>
+
+        <main class="info-pane">
+            <div class="section-card">
+                <div class="customer-profile">
+    <div class="avatar"><span class="material-symbols-rounded" style="font-size: 30px;">person</span></div>
+    <div>
+        <p style="font-size: 0.75rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase;">Customer Name</p>
+        <h3 style="font-weight: 800; margin-bottom: 2px;">{{ trip.customer_name }}</h3>
+        <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">PNR: {{ trip.pnr_number }}</p>
+    </div>
+</div>
+            </div>
+
+            <div class="section-card">
+                <div class="route-timeline">
+                    <div class="timeline-item">
+                        <span class="material-symbols-rounded" style="color: var(--success);">radio_button_checked</span>
+                        <div>
+                            <h4>Pickup Point</h4>
+                            <p>{{ trip.pickup_location }}</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <span class="material-symbols-rounded" style="color: var(--primary);">location_on</span>
+                        <div>
+                            <h4>Drop Location</h4>
+                            <p>{{ trip.drop_location }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trip-stats">
+                <div class="stat-box">
+                    <span class="stat-val" id="distRemaining">---</span>
+                    <span class="stat-label">DIST. LEFT</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val">{{ trip.fare }}</span>
+                    <span class="stat-label">TOTAL FARE</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val">{{ trip.load_weight }} kg</span>
+                    <span class="stat-label">LOAD WEIGHT</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="timeRemaining">---</span>
+                    <span class="stat-label">EST. TIME</span>
+                </div>
+            </div>
+
+            <button class="finish-btn" onclick="completeTrip({{ trip.id }})">
+                <span class="material-symbols-rounded">check_circle</span>
+                Finish & Complete Trip
+            </button>
+        </main>
+
+        <aside class="map-pane">
+            <div id="map"></div>
+            
+            <div class="map-controls">
+                <button class="control-btn" onclick="map.zoomIn()" title="Zoom In">
+                    <span class="material-symbols-rounded">add</span>
+                </button>
+                <button class="control-btn" onclick="map.zoomOut()" title="Zoom Out">
+                    <span class="material-symbols-rounded">remove</span>
+                </button>
+                <button class="control-btn recenter" onclick="recenterMap()" title="Recenter">
+                    <span class="material-symbols-rounded">my_location</span>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <div id="finishTripModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 20px;">
+    <div class="modal-card" style="background: white; padding: 3rem; border-radius: 24px; width: 100%; max-width: 550px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 70px; height: 70px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #dc2626;">
+                <span class="material-symbols-rounded" style="font-size: 40px;">receipt_long</span>
+            </div>
+            <h2 style="font-size: 1.8rem; font-weight: 800; color: #0f172a;">Final Settlement</h2>
+            <p style="color: #64748b; font-weight: 500;">Review costs before closing the trip.</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 10px;">Toll Tax Amount (₹)</label>
+            <div style="position: relative;">
+                <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 600;">₹</span>
+                <input type="number" id="tollAmountInput" 
+                    placeholder="0.00" 
+                    {% if "Plaza" in trip.fare %} 
+                        value="0" disabled 
+                        style="width: 100%; padding: 16px 16px 16px 35px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.2rem; background: #f8fafc; cursor: not-allowed;"
+                    {% else %}
+                        style="width: 100%; padding: 16px 16px 16px 35px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.2rem;"
+                    {% endif %}>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 2.5rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 10px;">Payment Received Via</label>
+            <select id="paymentMethodInput" style="width: 100%; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.1rem; font-weight: 600; background: white; cursor: pointer;">
+                <option value="" disabled selected>-- Select Method --</option>
+                <option value="Cash">💵 Cash</option>
+                <option value="UPI">📱 UPI / QR Code</option>
+                <option value="Prepaid">💳 Prepaid (Already Paid)</option>
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+            <button onclick="document.getElementById('finishTripModal').style.display='none'" style="padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 700; color: #64748b; cursor: pointer;">Discard</button>
+            <button id="finalSubmitBtn" onclick="submitFinalSettlement()" style="padding: 16px; border-radius: 14px; border: none; background: #dc2626; color: white; font-weight: 700; font-size: 1.1rem; cursor: pointer;">Complete Trip</button>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="completionSuccessModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="modal-card" style="background: white; padding: 3rem; border-radius: 24px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: modalSlideUp 0.4s ease;">
+        <div style="margin-bottom: 1.5rem;">
+            <div style="width: 80px; height: 80px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 4px solid #f0fdf4;">
+                <span class="material-symbols-rounded" style="font-size: 48px; color: #10b981; animation: scaleUp 0.5s ease;">check_circle</span>
+            </div>
+        </div>
+        <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Trip Completed!</h2>
+        <p style="color: #64748b; line-height: 1.6; margin-bottom: 2rem;">
+            The trip has been successfully settled and recorded in your history.
+        </p>
+        <button onclick="window.location.href='/driver/my-trips'" style="width: 100%; padding: 16px; background: #0f172a; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s;">
+            Go to My Trips
+        </button>
+    </div>
+</div>
+
+
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const primaryColor = "#dc2626";
+    let lastDriverPos = null;
+    let currentTripId = "{{ trip.id }}";
+
+    // --- 1. MODAL LOGIC (FIXED) ---
+    
+    // Consolidate into ONE function: This now ONLY opens the modal
+   // This function opens the modal
+function completeTrip(id) {
+    const modal = document.getElementById('finishTripModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error("Error: finishTripModal element not found in HTML.");
+    }
+}
+    // Handles the actual API call from the modal
+  function submitFinalSettlement() {
+    const tollInput = document.getElementById('tollAmountInput');
+    const toll = tollInput.disabled ? 0 : (tollInput.value || 0);
+    const method = document.getElementById('paymentMethodInput').value;
+    const btn = document.getElementById('finalSubmitBtn');
+    const settlementModal = document.getElementById('finishTripModal');
+    const successModal = document.getElementById('completionSuccessModal');
+
+    if (!method) {
+        alert("Action Required: Please select a payment method.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-rounded" style="animation: spin 1s linear infinite;">sync</span> Saving...`;
+
+    fetch(`/complete_trip/${currentTripId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            toll_tax: toll,
+            payment_method: method
+        })
+    })
+    .then(res => {
+        if (!res.ok) return res.text().then(text => { throw new Error(text) });
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Close settlement modal and show professional success modal
+            settlementModal.style.display = 'none';
+            successModal.style.display = 'flex';
+        }
+    })
+    .catch(err => {
+        console.error("Settlement Error:", err);
+        btn.disabled = false;
+        btn.innerHTML = "Complete Trip";
+        alert("Failed to save. Please try again.");
+    });
+}
+    // --- 2. MAP INITIALIZATION ---
+    
+    const map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    const truckIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448327.png',
+        iconSize: [50, 50], 
+        iconAnchor: [25, 25]
+    });
+
+    const pickupPin = L.divIcon({
+        html: `<span class="material-symbols-rounded" style="color:#10b981; font-size:32px;">radio_button_checked</span>`,
+        className: 'custom-pin', iconSize: [32, 32], iconAnchor: [16, 16]
+    });
+
+    const dropPin = L.divIcon({
+        html: `<span class="material-symbols-rounded" style="color:${primaryColor}; font-size:32px;">location_on</span>`,
+        className: 'custom-pin', iconSize: [32, 32], iconAnchor: [16, 32]
+    });
+
+    let driverMarker = L.marker([0,0], {icon: truckIcon, zIndexOffset: 1000}).addTo(map);
+    let routeLine = L.polyline([], {color: primaryColor, weight: 6, opacity: 0.7}).addTo(map);
+
+    const dLat = parseFloat("{{ trip.drop_lat if trip.drop_lat else 0 }}");
+    const dLng = parseFloat("{{ trip.drop_lng if trip.drop_lng else 0 }}");
+    const pLat = parseFloat("{{ trip.pickup_lat if trip.pickup_lat else 0 }}");
+    const pLng = parseFloat("{{ trip.pickup_lng if trip.pickup_lng else 0 }}");
+
+    if (pLat && pLng) L.marker([pLat, pLng], {icon: pickupPin}).addTo(map);
+    if (dLat && dLng) L.marker([dLat, dLng], {icon: dropPin}).addTo(map);
+
+    // --- 3. GEOLOCATION ---
+    
+    function updateLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                lastDriverPos = [lat, lng];
+
+                driverMarker.setLatLng(lastDriverPos);
+                
+                if (!map.getBounds().contains(lastDriverPos)) {
+                    map.panTo(lastDriverPos);
+                }
+
+                if (dLat && dLng) {
+                    fetchRoute(lat, lng);
+                }
+            }, (err) => {
+                console.error("GPS Error:", err);
+            }, { 
+                enableHighAccuracy: true,
+                maximumAge: 1000 
+            });
+        }
+    }
+
+    // --- UPDATED ROUTE LOGIC: PICKUP TO DROP ---
+async function fetchRoute(lat, lng) {
+    // 1. Ensure pickup and drop coordinates exist
+    if (!pLat || !pLng || !dLat || !dLng) return;
+
+    // 2. Map the line specifically from PICKUP -> DROP (longitude, latitude order)
+    const routeUrl = `https://router.project-osrm.org/route/v1/driving/${pLng},${pLat};${dLng},${dLat}?overview=full&geometries=geojson`;
+    
+    // 3. Calculate distance stats from DRIVER -> DROP (for real-time dashboard stats)
+    const statsUrl = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${dLng},${dLat}?overview=false`;
+
+    try {
+        // Fetch the static route line path
+        const routeRes = await fetch(routeUrl);
+        const routeData = await routeRes.json();
+        
+        if (routeData.code === 'Ok' && routeData.routes.length > 0) {
+            const coords = routeData.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            routeLine.setLatLngs(coords); // Draws line from Pickup to Drop
+        }
+
+        // Fetch the real-time stats (Driver to Drop)
+        const statsRes = await fetch(statsUrl);
+        const statsData = await statsRes.json();
+
+        if (statsData.code === 'Ok' && statsData.routes.length > 0) {
+            const km = (statsData.routes[0].distance / 1000).toFixed(1);
+            const mins = Math.round(statsData.routes[0].duration / 60);
+            
+            document.getElementById('distRemaining').innerText = km + " km";
+            document.getElementById('timeRemaining').innerText = mins + " min";
+        }
+    } catch (e) { 
+        console.error("Routing Error:", e); 
+    }
+}
+
+    function recenterMap() {
+        if (lastDriverPos) {
+            map.flyTo(lastDriverPos, 16, { animate: true, duration: 1.5 });
+        } else {
+            alert("Waiting for GPS signal...");
+        }
+    }
+
+    updateLocation();
+</script>
+</body>
+</html>

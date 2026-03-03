@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --primary-color:#c9a24d;
+            --dark-color: #1f2937;
+            --header-bg: #111827;
+            --main-bg: #f9fafb;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --warning-bg: #ffedd5;
+            --warning-text: #9a3412;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Poppins", sans-serif; background-color: var(--main-bg); color: var(--text-color); min-height: 100vh; }
+
+        /* Top Header */
+        .top-header {
+            background-color: var(--header-bg); color: #ffffff; padding: 0 5%; height: 70px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 1001; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 40px; }
+        .logo img { height: 45px; vertical-align: middle; }
+        
+        .top-nav-list { display: flex; list-style: none; gap: 10px; }
+        .top-nav-item a {
+            color: #d1d5db; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;
+        }
+        .top-nav-item a:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+        .top-nav-item a.active { background-color: var(--primary-color); color: #ffffff; font-weight: 600; }
+
+        .logout-btn {
+            display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+            border-radius: 8px; background-color: var(--danger-bg); color: var(--danger-text);
+            text-decoration: none; font-weight: 600; transition: 0.3s ease;
+        }
+
+        /* Main Content */
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 5%; width: 100%; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: var(--dark-color); }
+
+        /* Summary Cards */
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .card { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .card-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .card-info .value { font-size: 2rem; font-weight: 700; color: var(--dark-color); }
+        .card-info .label { color: var(--text-light); }
+
+        /* Table & Search */
+        .search-container { margin-bottom: 20px; }
+        .search-bar { width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 50px; border: 1px solid var(--border-color); font-family: inherit; }
+
+        .table-container { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .data-table th { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-active { background: var(--success-bg); color: var(--success-text); }
+        .status-suspended { background: var(--warning-bg); color: var(--warning-text); }
+        
+        .action-btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); background: #f9fafb; color: var(--text-color); display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
+        .action-btn:hover { background: #e5e7eb; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content-wide { background: #fff; border-radius: 20px; width: 95%; max-width: 1100px; display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 0; overflow-y: auto; display: flex; flex-direction: column; height: 100%; background: #f9fafb; }
+        
+        .profile-header-section { background: white; padding: 2rem; display: flex; gap: 25px; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .profile-large-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f3f4f6; background: #e0f2fe; color: #0369a1; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; }
+        
+        .modal-tabs { display: flex; background: white; padding: 0 2rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; }
+        .m-tab-btn { padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--text-light); border-bottom: 3px solid transparent; }
+        .m-tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 700; }
+
+        .m-tab-content { display: none; padding: 2rem; }
+        .m-tab-content.active { display: block; animation: slideUp 0.3s; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+        .info-item label { display: block; font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
+        .info-item p { font-size: 1rem; font-weight: 500; color: var(--dark-color); }
+
+        /* COMPLETE BOOKING CARD STYLES */
+        .booking-list-grid { display: flex; flex-direction: column; gap: 15px; }
+        .booking-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        
+        .bc-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; }
+        .bc-pnr { font-weight: 700; color: var(--primary-color); letter-spacing: 0.5px; }
+        .bc-date { font-size: 0.85rem; color: var(--text-light); font-weight: 500; }
+        
+        .bc-route { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; color: var(--dark-color); margin-bottom: 15px; }
+        .bc-arrow { color: var(--text-light); font-size: 1.2rem; }
+
+        .bc-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; }
+        .bc-item label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--text-light); margin-bottom: 3px; font-weight: 700; }
+        .bc-item p { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-color); }
+        
+        .bc-driver { color: var(--primary-color); }
+        .bc-rating { display: flex; align-items: center; gap: 5px; color: #f59e0b; font-weight: 700; }
+
+        .modal-footer { padding: 1.5rem; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* Buttons */
+        .btn-suspend { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-suspend:hover { background: #ffedd5; }
+        
+        .btn-activate { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-activate:hover { background: #dcfce7; }
+
+        .btn-delete { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-delete:hover { background: #fee2e2; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+              .header-actions { display: flex; align-items: center; gap: 20px; }
+      .admin-info { display: flex; align-items: center; gap: 10px; color: #d1d5db; font-size: 0.9rem; }
+        .admin-avatar { width: 32px; height: 32px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; }
+    /* --- Flash Message Notification Styles --- */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 9999;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+    background: white;
+}
+
+.alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+.close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+.close-btn:hover { opacity: 1; }
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Custom Confirmation Modal Styles --- */
+.confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px); animation: fadeIn 0.2s;
+}
+.confirm-overlay.active { display: flex; }
+
+.confirm-box {
+    background: white; width: 90%; max-width: 420px; padding: 30px;
+    border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    text-align: center; transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.confirm-overlay.active .confirm-box { transform: scale(1); }
+
+.confirm-icon { 
+    width: 70px; height: 70px; background: #fee2e2; color: #dc2626;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+.confirm-icon .material-symbols-outlined { font-size: 36px; }
+
+.confirm-title { font-size: 1.4rem; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+.confirm-desc { font-size: 1rem; color: #6b7280; margin-bottom: 30px; line-height: 1.5; }
+
+.confirm-actions { display: flex; gap: 15px; }
+.confirm-btn { 
+    flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; 
+    cursor: pointer; border: none; font-size: 1rem; transition: all 0.2s;
+}
+.btn-cancel-modal { background: #f3f4f6; color: #374151; }
+.btn-cancel-modal:hover { background: #e5e7eb; }
+
+.btn-confirm-modal { background: #dc2626; color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+.btn-confirm-modal:hover { background: #b91c1c; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="logo"><img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="Logo"></div>
+            <nav>
+                <ul class="top-nav-list">
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" >
+                            <span class="material-symbols-outlined">dashboard</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_driver_applications') }}">
+                            <span class="material-symbols-outlined">assignment_ind</span> Applications
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_drivers') }}">
+                            <span class="material-symbols-outlined">group</span> Drivers
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_users') }}" class="active">
+                            <span class="material-symbols-outlined">people</span> Customers
+                        </a>
+                    </li>
+
+                    <li class="top-nav-item">
+    <a href="{{ url_for('manage_trips') }}" class="{{ 'active' if request.endpoint == 'manage_trips' else '' }}">
+        <span class="material-symbols-outlined">alt_route</span> Trips
+    </a>
+</li>
+
+<li class="top-nav-item">
+        <a href="{{ url_for('admin_developers') }}">
+            <span class="material-symbols-outlined">engineering</span> Developers
+        </a>
+    </li>
+                </ul>
+            </nav>
+        </div>
+         <div class="header-actions">
+        <a href="{{ url_for('admin_profile') }}" style="text-decoration:none;">
+    <div class="admin-info" style="display:flex; align-items:center; gap:10px; color:#d1d5db; cursor:pointer;">
+        <div class="admin-avatar" style="width:32px; height:32px; background:var(--primary-color); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">
+            {{ session.admin_username[0] | upper }}
+        </div>
+        <span style="font-weight:500;">{{ session.admin_username }}</span>
+    </div>
+</a>
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+          <span class="material-symbols-outlined">logout</span> Logout
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Manage Customers</h1>
+        </div>
+
+        <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-icon" style="background:#dcfce7; color:#166534;"><span class="material-symbols-outlined">person_check</span></div>
+                <div><div class="value">{{ summary.total_users }}</div><div class="label">Total Users</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#e0e7ff; color:#4338ca;"><span class="material-symbols-outlined">check_circle</span></div>
+                <div><div class="value">{{ summary.active }}</div><div class="label">Active Accounts</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#ffedd5; color:#9a3412;"><span class="material-symbols-outlined">block</span></div>
+                <div><div class="value">{{ summary.suspended }}</div><div class="label">Suspended</div></div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="userSearch" class="search-bar" placeholder="Search by name, email, or phone..." onkeyup="filterUsers()">
+        </div>
+
+        <div class="table-container">
+            <table class="data-table" id="userTable">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Bookings</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.full_name }}</strong></td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone_number }}</td>
+                        <td><span class="status-badge" style="background:#f3f4f6; color:#374151;">{{ user.total_trips }}</span></td>
+                        <td>
+                            {% if user.status == 'Active' or user.status is none %}
+                                <span class="status-badge status-active">Active</span>
+                            {% else %}
+                                <span class="status-badge status-suspended">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick='viewUser({{ user.id }})'>
+                                <span class="material-symbols-outlined">visibility</span> Profile
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="viewUserModal" class="modal-overlay">
+        <div class="modal-content-wide">
+            <div class="modal-header">
+                <h2 class="modal-title">Customer Profile</h2>
+                <button onclick="closeModal()" style="border:none; background:none; font-size:2rem; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div class="profile-header-section">
+                <div id="mProfilePic" class="profile-large-img"></div>
+                <div>
+                    <h1 id="mFullName" style="font-size:1.8rem; font-weight:700; margin:0;"></h1>
+                    <p id="mEmailDisplay" style="color:var(--text-light); font-size:0.9rem; margin-top:5px;"></p>
+                    <div style="margin-top:10px;" id="mStatusContainer"></div>
+                </div>
+            </div>
+
+            <div class="modal-tabs">
+                <button class="m-tab-btn active" onclick="switchTab('t-personal')">Personal Info</button>
+                <button class="m-tab-btn" onclick="switchTab('t-bookings')">Booking History (<span id="mBookingCount">0</span>)</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="t-personal" class="m-tab-content active">
+                    <div class="info-grid">
+                        <div class="info-item"><label>Full Name</label><p id="mName"></p></div>
+                        <div class="info-item"><label>Email Address</label><p id="mEmail"></p></div>
+                        <div class="info-item"><label>Phone Number</label><p id="mPhone"></p></div>
+                        <div class="info-item"><label>Age</label><p id="mAge"></p></div>
+                        <div class="info-item"><label>Gender</label><p id="mGender"></p></div>
+                        <div class="info-item"><label>User ID</label><p id="mUserId"></p></div>
+                    </div>
+                </div>
+
+                <div id="t-bookings" class="m-tab-content">
+                    <div id="bookingList" class="booking-list-grid">
+                        </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div id="suspendUserContainer"></div>
+                <button id="deleteUserBtn" class="btn-delete" onclick="confirmDelete()">
+                    <span class="material-symbols-outlined">delete</span> Delete User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon" id="confirmIcon">
+            <span class="material-symbols-outlined">warning</span>
+        </div>
+        <h3 class="confirm-title" id="confirmTitle">Are you sure?</h3>
+        <p class="confirm-desc" id="confirmDesc">Do you really want to perform this action?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel-modal" onclick="closeConfirm()">Cancel</button>
+            <button class="confirm-btn btn-confirm-modal" id="confirmYesBtn">Yes, Proceed</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+
+        // --- Custom Modal Logic ---
+function showConfirm(title, message, callback, type = 'danger') {
+    const modal = document.getElementById('customConfirmModal');
+    const iconBox = document.getElementById('confirmIcon');
+    const iconSpan = iconBox.querySelector('span');
+    const yesBtn = document.getElementById('confirmYesBtn');
+
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmDesc').innerText = message;
+
+    if (type === 'danger') {
+        iconBox.style.background = '#fee2e2';
+        iconBox.style.color = '#dc2626';
+        iconSpan.innerText = 'warning';
+        yesBtn.style.background = '#dc2626';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)';
+        yesBtn.innerText = "Yes, Delete";
+    } else if (type === 'success') {
+        iconBox.style.background = '#dcfce7';
+        iconBox.style.color = '#166534';
+        iconSpan.innerText = 'check_circle';
+        yesBtn.style.background = '#166534';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(22, 101, 52, 0.3)';
+        yesBtn.innerText = "Yes, Activate";
+    } else { // Warning/Suspend
+        iconBox.style.background = '#fff7ed';
+        iconBox.style.color = '#c2410c';
+        iconSpan.innerText = 'block';
+        yesBtn.style.background = '#c2410c';
+        yesBtn.style.boxShadow = 'none';
+        yesBtn.innerText = "Yes, Suspend";
+    }
+
+    yesBtn.onclick = function() {
+        callback();
+        closeConfirm();
+    };
+
+    modal.classList.add('active');
+}
+
+function closeConfirm() {
+    document.getElementById('customConfirmModal').classList.remove('active');
+}
+      const usersData = {{ users|tojson|safe }};
+      
+      function filterUsers() {
+        let input = document.getElementById('userSearch').value.toUpperCase();
+        let rows = document.getElementById('userTable').getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            let text = rows[i].textContent.toUpperCase();
+            rows[i].style.display = text.indexOf(input) > -1 ? "" : "none";
+        }
+      }
+
+      function viewUser(id) {
+        const u = usersData.find(usr => usr.id === id);
+        if (!u) return;
+
+        // Header Avatar Logic
+        const picDiv = document.getElementById('mProfilePic');
+        if (u.profile_photo_url) {
+            picDiv.innerHTML = `<img src="${u.profile_photo_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        } else {
+            picDiv.innerHTML = u.full_name.charAt(0).toUpperCase();
+        }
+
+        document.getElementById('mFullName').textContent = u.full_name;
+        document.getElementById('mEmailDisplay').textContent = u.email;
+        
+        // Status Badge
+        const status = u.status || 'Active';
+        const statusHtml = status === 'Active' 
+            ? `<span class="status-badge status-active">Active Customer</span>` 
+            : `<span class="status-badge status-suspended">Suspended</span>`;
+        document.getElementById('mStatusContainer').innerHTML = statusHtml;
+
+        // Personal Details
+        document.getElementById('mName').textContent = u.full_name;
+        document.getElementById('mEmail').textContent = u.email;
+        document.getElementById('mPhone').textContent = u.phone_number;
+        document.getElementById('mAge').textContent = u.age ? u.age + ' Years' : 'N/A';
+        document.getElementById('mGender').textContent = u.gender ? u.gender.charAt(0).toUpperCase() + u.gender.slice(1) : 'N/A';
+        document.getElementById('mUserId').textContent = u.id;
+
+        // Bookings List
+        const bContainer = document.getElementById('bookingList');
+        bContainer.innerHTML = '';
+        document.getElementById('mBookingCount').textContent = u.bookings.length;
+        
+        if (u.bookings.length === 0) {
+            bContainer.innerHTML = '<p style="text-align:center; color:#6b7280; padding:20px;">No booking history found.</p>';
+        }
+
+       // [Inside the viewUser function in script tag]
+
+u.bookings.forEach(b => {
+  
+    // --- UPDATED COLOR LOGIC ---
+            let statusColor, statusText;
+
+            if (b.status === 'Completed') {
+                statusColor = '#dcfce7'; // Green
+                statusText = '#166534';
+            } else if (b.status === 'Ongoing' || b.status === 'Accepted') {
+                statusColor = '#dbeafe'; // Blue
+                statusText = '#1e40af';
+            } else if (b.status === 'Pending') {
+                statusColor = '#fef9c3'; // Yellow/Orange
+                statusText = '#854d0e';
+            } else {
+                // Cancelled or Rejected
+                statusColor = '#fee2e2'; // Red
+                statusText = '#991b1b';
+            }
+            // ---------------------------
+    
+    // --- NEW FARE LOGIC ---
+    let fareDisplay = '';
+    
+    if (b.status === 'Completed') {
+        // For Completed trips: Show Total Fare and Toll Breakdown
+        // Extract just the number from the original fare string (e.g., "₹ 500 + Extra..." -> "₹ 500")
+        let baseFare = b.fare.split('+')[0].split('(')[0].trim(); 
+        
+        fareDisplay = `
+            <span style="font-size:1.1rem; color:#166534; font-weight:700;">₹ ${b.total_fare}</span>
+            <div style="font-size:0.75rem; color:#6b7280; margin-top:2px;">
+                (Base: ${baseFare} + Toll: ₹ ${b.toll_tax})
+            </div>
+            <span style="font-size:0.8rem; font-weight:600; color:#374151;">Via ${b.payment_method}</span>
+        `;
+    } else {
+        // For Pending/Active trips: Show the estimated string (e.g., "₹ 500 + Extra Tolls")
+        fareDisplay = `
+            <span style="font-size:1rem; font-weight:600; color:#374151;">${b.fare}</span>
+            <div style="font-size:0.75rem; color:#6b7280; margin-top:2px;">Payment Pending</div>
+        `;
+    }
+    // ----------------------
+
+    let ratingHtml = b.rating ? `<span class="bc-rating">${b.rating} <span class="material-symbols-outlined" style="font-size:16px;">star</span></span>` : '<span style="color:#9ca3af;">No Rating</span>';
+    
+    bContainer.innerHTML += `
+        <div class="booking-card">
+            <div class="bc-header">
+                <div>
+                    <span class="bc-pnr">PNR: ${b.pnr_number}</span>
+                    <span class="bc-date"> &bull; ${b.booking_date}</span>
+                </div>
+                <span class="status-badge" style="background:${statusColor}; color:${statusText};">${b.status}</span>
+            </div>
+            
+            <div class="bc-route">
+                <span class="material-symbols-outlined" style="color:#5ca7a8;">radio_button_checked</span>
+                ${b.pickup_location.split(',')[0]} 
+                <span class="material-symbols-outlined bc-arrow">arrow_right_alt</span> 
+                <span class="material-symbols-outlined" style="color:#dc2626;">location_on</span>
+                ${b.drop_location.split(',')[0]}
+            </div>
+
+            <div class="bc-details">
+                <div class="bc-item">
+                    <label>Driver Info</label>
+                    <p class="bc-driver">${b.driver_name} <br> <span style="font-size:0.8rem; color:#6b7280;">${b.driver_vehicle}</span></p>
+                </div>
+                <div class="bc-item">
+                    <label>Fare & Payment</label>
+                    ${fareDisplay}
+                </div>
+                <div class="bc-item">
+                    <label>Customer Feedback</label>
+                    ${ratingHtml}
+                    ${b.feedback ? `<p style="font-size:0.8rem; color:#4b5563; margin-top:2px;">"${b.feedback}"</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+});
+
+        // Suspend/Activate Button Logic
+        const suspendContainer = document.getElementById('suspendUserContainer');
+        if (status === 'Active') {
+            suspendContainer.innerHTML = `
+                <button onclick="toggleUserStatus(${u.id}, 'suspend')" class="btn-suspend">
+                    <span class="material-symbols-outlined">block</span> Suspend User
+                </button>`;
+        } else {
+            suspendContainer.innerHTML = `
+                <button onclick="toggleUserStatus(${u.id}, 'activate')" class="btn-activate">
+                    <span class="material-symbols-outlined">check_circle</span> Re-activate User
+                </button>`;
+        }
+
+        // Delete Button Logic
+        document.getElementById('deleteUserBtn').setAttribute('onclick', `confirmDelete(${u.id})`);
+
+        document.getElementById('viewUserModal').classList.add('active');
+      }
+
+      function closeModal() {
+        document.getElementById('viewUserModal').classList.remove('active');
+      }
+
+      function switchTab(tabId) {
+        document.querySelectorAll('.m-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.m-tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+      }
+
+      function toggleUserStatus(userId, action) {
+    const isSuspend = action === 'suspend';
+    showConfirm(
+        isSuspend ? "Suspend User?" : "Activate User?",
+        isSuspend ? "This user will not be able to log in or book trips." : "This user account will be fully restored.",
+        () => window.location.href = `/admin/${action}_user/${userId}`,
+        isSuspend ? 'warning' : 'success'
+    );
+}
+
+function confirmDelete(userId) {
+    showConfirm(
+        "Delete User?",
+        "This will permanently delete the user profile and their booking history. Cannot be undone.",
+        () => window.location.href = `/admin/delete_user/${userId}`,
+        'danger'
+    );
+}
+      // Auto-dismiss alerts after 4 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.transition = "opacity 0.5s ease";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 4000);
+    </script>
+</body>
+</html>

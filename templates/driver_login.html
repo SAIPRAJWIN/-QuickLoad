@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Login - QuickLoad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <style>
+      :root {
+        --primary-color: #5ca7a8; /* Teal color theme */
+        --dark-blue: #1f2937;
+        --grey: #f3f4f6;
+        --text-color: #374151;
+        --text-light: #6b7280;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--grey);
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      /* --- Flash Message Notification Styles --- */
+      .flash-container {
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        width: 90%; max-width: 400px; z-index: 9999;
+      }
+      .alert {
+        padding: 12px 20px; border-radius: 8px; margin-bottom: 10px;
+        font-size: 0.95rem; font-weight: 500; display: flex; align-items: center;
+        justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        animation: slideDown 0.3s ease-out;
+      }
+      .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+      .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+      .close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; line-height: 1; opacity: 0.6; }
+      .close-btn:hover { opacity: 1; }
+      @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+      /* --- Main Layout --- */
+      .login-container { display: flex; width: 100%; height: 100vh; animation: fadeIn 1s ease-in-out; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+      .form-panel { flex-basis: 50%; display: flex; justify-content: center; align-items: center; padding: 40px; background-color: #ffffff; }
+      .form-wrapper { width: 100%; max-width: 400px; }
+      .form-wrapper h2 { font-size: 2rem; font-weight: 600; color: var(--dark-blue); margin-bottom: 0.5rem; }
+      .form-wrapper .subtitle { color: var(--text-light); margin-bottom: 2.5rem; }
+
+      .form-group { margin-bottom: 1.5rem; position: relative; }
+      .form-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-color); }
+      .form-input { width: 100%; padding: 14px 45px 14px 15px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; font-family: "Poppins", sans-serif; transition: all 0.3s ease; }
+      .form-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(92, 167, 168, 0.2); }
+      .input-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); pointer-events: none; }
+      .password-toggle { cursor: pointer; pointer-events: auto; }
+
+      .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; font-size: 0.9rem; }
+      .checkbox-group { display: flex; align-items: center; }
+      .checkbox-group input { margin-right: 8px; accent-color: var(--primary-color); }
+      .forgot-password-link { color: var(--primary-color); text-decoration: none; font-weight: 500; cursor: pointer; }
+      .forgot-password-link:hover { text-decoration: underline; }
+
+      .submit-btn { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+      .submit-btn:hover { background-color: #4a8e8f; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(92, 167, 168, 0.4); }
+
+      .register-section { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--grey); }
+      .register-section p { color: var(--text-light); margin-bottom: 0.5rem; }
+      .register-link { color: var(--primary-color); font-weight: 600; text-decoration: none; }
+      .register-link:hover { text-decoration: underline; }
+      .status-link-text { font-size: 0.9rem; margin-top: 1rem; color: var(--text-light); }
+
+      /* --- Branding Panel --- */
+      .branding-panel {
+        flex-basis: 50%;
+        background: linear-gradient(rgba(31, 41, 55, 0.85), rgba(31, 41, 55, 0.85)), url("{{ url_for('static', filename='images/login-bg.png') }}");
+        background-size: cover; background-position: center;
+        color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 50px;
+      }
+      .branding-logo img { height: 80px; width: auto; margin-bottom: 2rem; }
+      .branding-content h1 { font-size: 2.8rem; font-weight: 700; line-height: 1.2; margin-bottom: 1rem; }
+      .branding-content p { font-size: 1.1rem; color: rgba(255, 255, 255, 0.8); max-width: 450px; margin: 0 auto; }
+
+      /* --- MODERN MODAL STYLES --- */
+      .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+        z-index: 10000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+      }
+      .modal-overlay.active { display: flex; opacity: 1; }
+      .modal-card {
+        background: white; width: 100%; max-width: 450px; border-radius: 20px; padding: 2rem;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .modal-overlay.active .modal-card { transform: translateY(0); }
+      
+      .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+      .modal-title h3 { font-size: 1.5rem; font-weight: 700; color: var(--dark-blue); margin-bottom: 0.5rem; }
+      .modal-title p { color: var(--text-light); font-size: 0.9rem; }
+      .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-light); transition: 0.2s; }
+      .modal-close:hover { color: var(--danger-color); transform: rotate(90deg); }
+
+      /* Steps */
+      .modal-step { display: none; animation: fadeIn 0.3s ease; }
+      .modal-step.active { display: block; }
+      .step-btn { width: 100%; margin-top: 1rem; padding: 12px; border-radius: 8px; border: none; background: var(--primary-color); color: white; font-weight: 600; cursor: pointer; font-size: 1rem; }
+      .step-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+      .resend-link { font-size: 0.85rem; color: var(--primary-color); cursor: pointer; margin-top: 10px; display: inline-block; text-decoration: underline; }
+      .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 5px; display: none; }
+
+      /* Responsive */
+      @media (max-width: 992px) { .branding-panel { display: none; } .form-panel { flex-basis: 100%; } }
+      @media (max-width: 480px) { .form-wrapper { max-width: 100%; } .modal-card { margin: 20px; } }
+    </style>
+  </head>
+  <body>
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <div class="login-container">
+      <div class="branding-panel">
+        <div class="branding-logo">
+          <img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="QuickLoad Logo" />
+        </div>
+        <div class="branding-content">
+          <h1>Your Journey, Your Earnings.</h1>
+          <p>Log in to manage your trips, track your earnings, and access exclusive driver benefits with QuickLoad.</p>
+        </div>
+      </div>
+      <div class="form-panel">
+        <div class="form-wrapper">
+          <h2>Driver Sign In</h2>
+          <p class="subtitle">Welcome back! Please enter your details.</p>
+
+          <form action="/driver/login" method="POST">
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address</label>
+              <div style="position: relative">
+                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" required />
+                <span class="material-symbols-outlined input-icon">mail</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="form-label">Password</label>
+              <div style="position: relative">
+                <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required />
+                <span class="material-symbols-outlined input-icon password-toggle" id="passwordToggle">visibility_off</span>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <div class="checkbox-group">
+                <input type="checkbox" id="remember-me" name="remember-me" />
+                <label for="remember-me">Remember me</label>
+              </div>
+              <span class="forgot-password-link" onclick="openForgotModal()">Forgot password?</span>
+            </div>
+
+            <button type="submit" class="submit-btn">Sign In</button>
+          </form>
+
+          <div class="register-section">
+            <p>Not a driver partner yet? <a href="/driver_register" class="register-link">Register Here</a></p>
+            <p class="status-link-text">Check the status of your application <a href="/check_status" class="register-link">here</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="forgotModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3>Reset Password</h3>
+                    <p id="modalSub">Enter your email to receive a code.</p>
+                </div>
+                <button class="modal-close" onclick="closeForgotModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="step1" class="modal-step active">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="resetEmail" class="form-input" placeholder="e.g. driver@example.com">
+                        <div class="error-msg" id="errStep1"></div>
+                    </div>
+                    <button class="step-btn" onclick="sendResetOTP(this)">Send Verification Code</button>
+                </div>
+
+                <div id="step2" class="modal-step">
+                    <div class="form-group">
+                        <label class="form-label">Verification Code</label>
+                        <input type="text" id="resetOTP" class="form-input" placeholder="Enter 6-digit code" maxlength="6">
+                        <div class="error-msg" id="errStep2"></div>
+                    </div>
+                    <button class="step-btn" onclick="verifyResetOTP(this)">Verify Code</button>
+                    <div style="text-align: center;">
+                        <span class="resend-link" onclick="backToStep1()">Wrong email? Go back</span>
+                    </div>
+                </div>
+
+                <div id="step3" class="modal-step">
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="newPass" class="form-input" placeholder="Minimum 8 characters">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirmPass" class="form-input" placeholder="Retype password">
+                        <div class="error-msg" id="errStep3"></div>
+                    </div>
+                    <button class="step-btn" onclick="commitPasswordReset(this)">Reset Password</button>
+                </div>
+
+                <div id="step4" class="modal-step" style="text-align: center;">
+                    <div style="width: 70px; height: 70px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <span class="material-symbols-outlined" style="font-size: 40px; color: #166534;">check_circle</span>
+                    </div>
+                    <h3 style="color: #1f2937; margin-bottom: 10px;">Password Reset!</h3>
+                    <p style="color: #6b7280; margin-bottom: 20px;">Your password has been updated successfully. You can now login.</p>
+                    <button class="step-btn" onclick="closeForgotModal()">Back to Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      // --- Password Toggle Logic ---
+      document.addEventListener("DOMContentLoaded", () => {
+        const passwordInput = document.getElementById("password");
+        const passwordToggle = document.getElementById("passwordToggle");
+        if (passwordToggle) {
+          passwordToggle.addEventListener("click", () => {
+            const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+            passwordInput.setAttribute("type", type);
+            passwordToggle.textContent = type === "password" ? "visibility_off" : "visibility";
+          });
+        }
+        // Auto-dismiss alerts
+        setTimeout(() => {
+          document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 4000);
+      });
+
+      // --- MODAL LOGIC ---
+      let globalEmail = "";
+
+      function openForgotModal() {
+        document.getElementById('forgotModal').classList.add('active');
+        showStep(1);
+        document.getElementById('resetEmail').value = "";
+        document.getElementById('resetOTP').value = "";
+        document.getElementById('newPass').value = "";
+        document.getElementById('confirmPass').value = "";
+        clearErrors();
+      }
+
+      function closeForgotModal() {
+        document.getElementById('forgotModal').classList.remove('active');
+      }
+
+      function showStep(stepNum) {
+        document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step${stepNum}`).classList.add('active');
+        
+        // Update headers based on step
+        const sub = document.getElementById('modalSub');
+        if(stepNum === 1) sub.textContent = "Enter your email to receive a code.";
+        if(stepNum === 2) sub.textContent = `Enter the code sent to ${globalEmail}`;
+        if(stepNum === 3) sub.textContent = "Secure your account with a new password.";
+        if(stepNum === 4) sub.textContent = "All done!";
+      }
+
+      function showError(step, msg) {
+        const el = document.getElementById(`errStep${step}`);
+        el.textContent = msg;
+        el.style.display = 'block';
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.error-msg').forEach(e => e.style.display = 'none');
+      }
+
+      // --- STEP 1: SEND OTP ---
+      function sendResetOTP(btn) {
+        const email = document.getElementById('resetEmail').value.trim();
+        if(!email) return showError(1, "Please enter your email.");
+        
+        btn.disabled = true;
+        btn.innerText = "Sending...";
+        clearErrors();
+
+        fetch('/driver/forgot-password/request-otp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerText = "Send Verification Code";
+            if(data.success) {
+                globalEmail = email;
+                showStep(2);
+            } else {
+                showError(1, data.message);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            showError(1, "Network error. Try again.");
+        });
+      }
+
+      // --- STEP 2: VERIFY OTP ---
+      function verifyResetOTP(btn) {
+        const otp = document.getElementById('resetOTP').value.trim();
+        if(otp.length < 4) return showError(2, "Invalid OTP.");
+
+        btn.disabled = true;
+        btn.innerText = "Verifying...";
+        clearErrors();
+
+        fetch('/driver/forgot-password/verify-otp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: globalEmail, otp: otp })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerText = "Verify Code";
+            if(data.success) {
+                showStep(3);
+            } else {
+                showError(2, data.message);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            showError(2, "Network error.");
+        });
+      }
+
+      function backToStep1() {
+        showStep(1);
+      }
+
+      // --- STEP 3: RESET PASSWORD ---
+      function commitPasswordReset(btn) {
+        const p1 = document.getElementById('newPass').value;
+        const p2 = document.getElementById('confirmPass').value;
+
+        if(p1.length < 8) return showError(3, "Password must be at least 8 chars.");
+        if(p1 !== p2) return showError(3, "Passwords do not match.");
+
+        btn.disabled = true;
+        btn.innerText = "Resetting...";
+        clearErrors();
+
+        fetch('/driver/forgot-password/reset', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: globalEmail, password: p1 })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerText = "Reset Password";
+            if(data.success) {
+                showStep(4);
+            } else {
+                showError(3, data.message);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            showError(3, "Network error.");
+        });
+      }
+    </script>
+  </body>
+</html>

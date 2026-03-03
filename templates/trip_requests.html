@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trip Requests - Driver Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+      :root {
+        --primary-color: #5ca7a8;
+        --dark-color: #1f2937;
+        --sidebar-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      /* --- ALERT MESSAGE STYLES --- */
+      .flash-container {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        z-index: 9999;
+      }
+
+      .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        animation: slideDown 0.4s ease-out;
+        background: white; 
+      }
+
+      .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+      .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+      .close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+      
+      @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+      /* --- Sidebar Navigation --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        color: #d1d5db;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+      .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+      .sidebar-logo img { height: 50px; }
+      .sidebar-nav { flex-grow: 1; padding: 20px 10px; overflow-y: auto; }
+      .nav-list { list-style: none; }
+      .nav-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); padding: 0 15px; margin: 15px 0 10px 0; }
+      .nav-item a {
+        display: flex; align-items: center; gap: 15px; padding: 12px 15px;
+        color: #d1d5db; text-decoration: none; border-radius: 8px;
+        transition: all 0.3s ease; margin-bottom: 5px;
+      }
+      .nav-item a:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+      .nav-item a.active { background-color: var(--primary-color); color: #ffffff; font-weight: 600; }
+
+      /* --- Main Content Area --- */
+      .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 25px; transition: all 0.3s ease; }
+
+      .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+      .header-left { display: flex; align-items: center; gap: 15px; }
+      .hamburger { display: none; cursor: pointer; font-size: 28px; }
+      .page-title h1 { font-size: 1.8rem; font-weight: 700; }
+
+      /* --- Modern Request Card Styles --- */
+      .requests-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+
+      .request-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s;
+        animation: slideUp 0.5s ease;
+      }
+      .request-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1); }
+
+      .map-preview {
+        height: 160px;
+        background: #e2e8f0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+      .req-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; }
+      .req-badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+      .req-fare { font-size: 1.4rem; font-weight: 700; color: var(--success-color); }
+
+      /* Customer Row */
+      .customer-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; }
+      .cust-info { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: var(--dark-color); }
+      .cust-info .icon { color: var(--text-light); font-size: 20px; }
+      .call-btn { background: #3b82f6; color: white; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.2s; }
+      .call-btn:hover { background: #2563eb; }
+      .call-btn span { font-size: 18px; }
+
+      /* Route Section */
+      .route-section { position: relative; padding-left: 10px; }
+      .route-connector { position: absolute; left: 19px; top: 10px; bottom: 10px; width: 2px; background: #e5e7eb; z-index: 0; }
+      .route-row { display: flex; align-items: flex-start; gap: 12px; position: relative; z-index: 1; margin-bottom: 12px; }
+      .route-row:last-child { margin-bottom: 0; }
+      .dot { font-size: 20px; background: white; }
+      .dot.pickup { color: var(--primary-color); }
+      .dot.drop { color: var(--danger-color); }
+      
+      .loc-text { display: flex; flex-direction: column; }
+      .loc-text .label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; }
+      .loc-text .val { font-size: 0.95rem; font-weight: 600; color: var(--dark-color); line-height: 1.3; }
+
+      /* Meta Grid */
+      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+      .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; color: var(--text-light); }
+      .meta-item span { font-size: 18px; color: var(--primary-color); }
+
+      /* Actions */
+      .card-actions { display: flex; gap: 12px; margin-top: 5px; }
+      .action-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+      .btn-accept { background-color: var(--dark-color); color: white; }
+      .btn-accept:hover { background-color: #000; }
+      .btn-decline { background-color: white; border: 1px solid #e5e7eb; color: var(--text-color); }
+      .btn-decline:hover { background-color: #fef2f2; color: var(--danger-color); border-color: #fecaca; }
+
+      .no-requests {
+        grid-column: 1 / -1; text-align: center; padding: 60px 20px; background-color: #fff;
+        border-radius: 16px; border: 1px solid var(--border-color); color: var(--text-light);
+      }
+      .no-requests .material-symbols-outlined { font-size: 4rem; opacity: 0.3; margin-bottom: 10px; }
+
+      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+      @media (max-width: 992px) { .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } .main-content { margin-left: 0; width: 100%; } .hamburger { display: block; } }
+      @media (max-width: 576px) { .requests-grid { grid-template-columns: 1fr; } }
+
+          /* Red Logout Button Styles */
+      .nav-item a.logout-btn {
+        background-color: transparent; /* Transparent by default */
+        color: #dc2626 !important; /* Red Text */ 
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+      
+      /* Hover State: Light Red Background */
+      .nav-item a.logout-btn:hover {
+        background-color: #fef2f2; /* Very Light Red */
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="sidebar-logo">
+          <img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="QuickLoad Logo" />
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-title">Menu</li>
+          <li class="nav-item">
+             <a href="{{ url_for('driver_dashboard') }}">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('trip_requests') }}" class="active">
+              <span class="material-symbols-outlined">notifications_active</span>
+              <span>Trip Requests</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_trips') }}">
+              <span class="material-symbols-outlined">alt_route</span>
+              <span>My Trips</span>
+            </a>
+          </li>
+          <li class="nav-title">Manage</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_vehicles') }}">
+              <span class="material-symbols-outlined">local_shipping</span>
+              <span>My Vehicles</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_earnings') }}">
+              <span class="material-symbols-outlined">payments</span>
+              <span>Earnings</span>
+            </a>
+          </li>
+          <li class="nav-title">Account</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_profile') }}">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span>My Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('support') }}">
+              <span class="material-symbols-outlined">help</span>
+              <span>Support</span>
+            </a>
+          </li>
+         <li class="nav-item">
+            <a href="/driver_logout" class="logout-btn">
+              <span class="material-symbols-outlined">logout</span><span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <header class="main-header">
+        <div class="header-left">
+          <span class="material-symbols-outlined hamburger" id="hamburgerBtn">menu</span>
+          <div class="page-title">
+            <h1>Trip Requests</h1>
+          </div>
+        </div>
+      </header>
+
+      <div class="requests-grid" id="requestsGrid">
+        {% if pending_trips %}
+          {% for trip in pending_trips %}
+            <div class="request-card">
+              <div id="map-{{ trip.id }}" class="map-preview"></div>
+              
+              <div class="card-content">
+                <div class="req-header">
+                  <span class="req-badge">New Request</span>
+                  <span class="req-fare">{{ trip.fare }}</span>
+                </div>
+                
+                <div class="customer-row">
+                    <div class="cust-info">
+                        <span class="material-symbols-outlined icon">person</span>
+                        <span>{{ trip.customer_name }}</span>
+                    </div>
+                    <a href="tel:{{ trip.customer_phone }}" class="call-btn">
+                        <span class="material-symbols-outlined">call</span>
+                    </a>
+                </div>
+
+                <div class="route-section">
+                    <div class="route-connector"></div>
+                    <div class="route-row">
+                        <span class="material-symbols-outlined dot pickup">radio_button_checked</span>
+                        <div class="loc-text">
+                            <span class="label">Pickup</span>
+                            <span class="val">{{ trip.pickup_location.split(',')[0] }}</span>
+                        </div>
+                    </div>
+                    <div class="route-row">
+                        <span class="material-symbols-outlined dot drop">location_on</span>
+                        <div class="loc-text">
+                            <span class="label">Drop</span>
+                            <span class="val">{{ trip.drop_location.split(',')[0] }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <span class="material-symbols-outlined">weight</span> {{ trip.load_weight }} kg
+                    </div>
+                    <div class="meta-item">
+                        <span class="material-symbols-outlined">local_shipping</span> {{ trip.vehicle_type_booked or 'Any' }}
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                  <button class="action-btn btn-decline" onclick="handleDecline(this, {{ trip.id }})">
+                    <span class="material-symbols-outlined">close</span> Decline
+                  </button>
+                  <button class="action-btn btn-accept" onclick='handleAccept(this, {{ trip | tojson | safe }})'>
+                    <span class="material-symbols-outlined">check</span> Accept
+                  </button>
+                </div>
+              </div>
+
+              <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                  initPreviewMap("map-{{ trip.id }}", {{ trip.pickup_lat }}, {{ trip.pickup_lng }}, {{ trip.drop_lat }}, {{ trip.drop_lng }});
+                });
+              </script>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div id="noRequestsPlaceholder" class="no-requests" style="{% if pending_trips %}display: none;{% endif %}">
+          <span class="material-symbols-outlined">notifications_paused</span>
+          <p>Waiting for new trip requests...</p>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+      const socket = io();
+
+      // --- REUSABLE MAP INITIALIZATION FUNCTION ---
+      function initPreviewMap(containerId, pLat, pLng, dLat, dLng) {
+        if (!pLat || !dLat) return;
+        
+        const map = L.map(containerId, {
+          zoomControl: false, // Cleaner look for card preview
+          dragging: false,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          attributionControl: false
+        }).setView([pLat, pLng], 12);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+
+        L.circleMarker([pLat, pLng], { color: '#5ca7a8', radius: 6, fillOpacity: 1 }).addTo(map);
+        L.circleMarker([dLat, dLng], { color: '#ef4444', radius: 6, fillOpacity: 1 }).addTo(map);
+
+        // Fetch dynamic road path from OSRM
+        fetch(`https://router.project-osrm.org/route/v1/driving/${pLng},${pLat};${dLng},${dLat}?overview=full&geometries=geojson`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.routes && data.routes.length > 0) {
+              const route = L.geoJSON(data.routes[0].geometry, {
+                style: { color: '#1f2937', weight: 3, opacity: 0.8 }
+              }).addTo(map);
+              map.fitBounds(route.getBounds(), { padding: [20, 20] });
+            }
+          })
+          .catch(err => console.error("Preview Map Error:", err));
+      }
+
+      // --- SOCKET.IO LISTENER (UPDATED FOR NEW LAYOUT) ---
+      socket.on('new_trip_request', (data) => {
+        const placeholder = document.getElementById('noRequestsPlaceholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        const grid = document.getElementById('requestsGrid');
+        const newCard = document.createElement('div');
+        newCard.className = 'request-card';
+        newCard.style.animation = 'slideUp 0.5s ease';
+        
+        const liveMapId = `map-live-${Date.now()}`;
+
+        // Create HTML matching the server-side loop
+        newCard.innerHTML = `
+          <div id="${liveMapId}" class="map-preview"></div>
+          <div class="card-content">
+            <div class="req-header">
+              <span class="req-badge">New Request</span>
+              <span class="req-fare">${data.fare}</span>
+            </div>
+            
+            <div class="customer-row">
+                <div class="cust-info">
+                    <span class="material-symbols-outlined icon">person</span>
+                    <span>${data.customer_name}</span>
+                </div>
+                <a href="tel:${data.customer_phone}" class="call-btn">
+                    <span class="material-symbols-outlined">call</span>
+                </a>
+            </div>
+
+            <div class="route-section">
+                <div class="route-connector"></div>
+                <div class="route-row">
+                    <span class="material-symbols-outlined dot pickup">radio_button_checked</span>
+                    <div class="loc-text">
+                        <span class="label">Pickup</span>
+                        <span class="val">${data.pickup.split(',')[0]}</span>
+                    </div>
+                </div>
+                <div class="route-row">
+                    <span class="material-symbols-outlined dot drop">location_on</span>
+                    <div class="loc-text">
+                        <span class="label">Drop</span>
+                        <span class="val">${data.drop.split(',')[0]}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span class="material-symbols-outlined">weight</span> ${data.weight} kg
+                </div>
+                <div class="meta-item">
+                    <span class="material-symbols-outlined">local_shipping</span> ${data.vehicle || 'Any'}
+                </div>
+            </div>
+
+            <div class="card-actions">
+              <button class="action-btn btn-decline" onclick="this.closest('.request-card').remove()">
+                <span class="material-symbols-outlined">close</span> Decline
+              </button>
+              <button class="action-btn btn-accept" onclick="handleAccept(this, ${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                <span class="material-symbols-outlined">check</span> Accept
+              </button>
+            </div>
+          </div>
+        `;
+        
+        grid.prepend(newCard);
+        initPreviewMap(liveMapId, data.pickupLat, data.pickupLng, data.dropLat, data.dropLng);
+      });
+
+      function handleAccept(btn, tripData) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Processing...';
+
+        const payload = {
+          trip_id: tripData.id || tripData.trip_id,
+          pickupLat: tripData.pickup_lat || tripData.pickupLat,
+          pickupLng: tripData.pickup_lng || tripData.pickupLng,
+          dropLat: tripData.drop_lat || tripData.dropLat,
+          dropLng: tripData.drop_lng || tripData.dropLng
+        };
+
+        fetch('/accept_trip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            window.location.href = "/driver/my-trips";
+          } else {
+            alert("Error: " + data.message);
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">check</span> Accept';
+          }
+        });
+      }
+
+      function handleDecline(btn, tripId) {
+        const card = btn.closest('.request-card');
+        card.style.opacity = '0.5';
+        btn.disabled = true;
+
+        fetch(`/decline_trip/${tripId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                card.remove();
+                const grid = document.getElementById('requestsGrid');
+                if (grid.querySelectorAll('.request-card').length === 0) {
+                    document.getElementById('noRequestsPlaceholder').style.display = 'block';
+                }
+            } else {
+                card.style.opacity = '1';
+                btn.disabled = false;
+                console.error("Decline failed:", data.message);
+            }
+        });
+      }
+
+      // Sidebar Mobile Toggle
+      document.getElementById("hamburgerBtn").addEventListener("click", () => {
+        document.getElementById("sidebar").classList.toggle("open");
+      });
+
+      // Auto-dismiss alerts
+      setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = "opacity 0.5s ease";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 500);
+        });
+      }, 4000);
+    </script>
+  </body>
+</html>

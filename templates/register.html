@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | QuickLoad</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+    <style>
+        :root {
+            /* Matches Login Page Variables */
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            
+            /* Strength Meter Colors */
+            --weak: #ef4444;
+            --medium: #f59e0b;
+            --strong: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        /* --- CANVAS BACKGROUND --- */
+        #particle-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background: radial-gradient(circle at center, #fff1f2, #f1f5f9); 
+        }
+
+        /* --- MAIN CARD --- */
+        .auth-container {
+            display: flex;
+            width: 100%; max-width: 1000px; /* Wider for registration form */
+            background: rgba(255, 255, 255, 0.85); /* Glass Effect */
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); 
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- LEFT SIDE (FORM) --- */
+        .auth-form-side { 
+            padding: 2.5rem; 
+            flex: 1.2; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            max-height: 90vh;
+            overflow-y: auto; /* Scroll if form is too tall */
+        }
+        
+        /* Custom Scrollbar */
+        .auth-form-side::-webkit-scrollbar { width: 6px; }
+        .auth-form-side::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .brand { margin-bottom: 1.5rem; text-align: center; }
+        .brand img { height: 55px; display: block; margin: 0 auto; }
+
+        .title-group { margin-bottom: 1.5rem; text-align: center; }
+        .title-group h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.3rem; }
+        .title-group p { color: var(--text-sub); font-size: 0.95rem; }
+
+        /* Form Layout */
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+
+        .form-group { margin-bottom: 1.2rem; position: relative; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.4rem; }
+        
+        .input-box { position: relative; }
+        .input-box input {
+            width: 100%; padding: 12px 16px 12px 42px;
+            background: rgba(255, 255, 255, 0.8); 
+            border: 1px solid var(--border); 
+            border-radius: 12px;
+            font-size: 0.95rem; transition: 0.2s; outline: none;
+            color: var(--text-main); font-family: inherit;
+        }
+        .input-box input::placeholder { color: #94a3b8; }
+        .input-box input:focus { 
+            border-color: var(--primary); 
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); 
+        }
+        .input-box input.is-invalid { border-color: var(--weak); }
+
+        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); font-size: 20px; }
+        
+        .password-toggle {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 20px;
+        }
+        .password-toggle:hover { color: var(--primary); }
+
+        /* Error Messages */
+        .error-message {
+            color: var(--weak); font-size: 0.75rem; margin-top: 4px; display: none; font-weight: 500;
+        }
+        .error-message.visible { display: block; }
+
+        /* Password Strength */
+        #password-strength-container { display: none; align-items: center; gap: 8px; margin-top: 6px; }
+        #password-strength { flex-grow: 1; height: 4px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        #password-strength-bar { height: 100%; width: 0; transition: 0.3s; border-radius: 4px; }
+        #password-strength-text { font-size: 0.75rem; font-weight: 600; color: var(--text-sub); }
+
+        /* Terms */
+        .terms-group { font-size: 0.85rem; color: var(--text-main); margin: 1rem 0; display: flex; align-items: center; gap: 8px; }
+        .terms-group input { accent-color: var(--primary); width: 16px; height: 16px; }
+        .terms-link { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .terms-link:hover { text-decoration: underline; }
+
+        /* Button */
+        .btn-primary {
+            width: 100%; padding: 14px; 
+            background: var(--text-main); 
+            color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary:hover { background: black; transform: translateY(-1px); }
+
+        .login-section { text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; font-size: 0.9rem; color: var(--text-sub); }
+        .login-link { color: var(--primary); font-weight: 700; text-decoration: none; margin-left: 5px; }
+        .login-link:hover { text-decoration: underline; }
+
+        /* --- RIGHT SIDE (VISUAL) --- */
+        .auth-visual-side {
+            flex: 1; 
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white; padding: 3rem;
+            display: flex; flex-direction: column; justify-content: center;
+            background-image: url('{{ url_for("static", filename="images/register-bg.png") }}');
+            background-size: cover; background-blend-mode: overlay;
+        }
+        .visual-content h2 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+        .visual-content p { opacity: 0.8; font-size: 1.1rem; line-height: 1.6; }
+
+        /* --- MODAL (Terms) --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px); z-index: 999;
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.visible { display: flex; opacity: 1; }
+
+        .modal-card {
+            background: white; color: var(--text-main);
+            width: 100%; max-width: 600px;
+            border-radius: 20px; padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+        .modal-body { overflow-y: auto; padding-right: 10px; line-height: 1.6; color: var(--text-sub); font-size: 0.9rem; }
+        .close-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 1.5rem; }
+        .close-btn:hover { color: var(--primary); }
+
+        /* --- TOAST --- */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; top: 30px; right: 30px;
+            font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-weight: 500;
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {top: 0; opacity: 0;} to {top: 30px; opacity: 1;} }
+        @keyframes fadeout { from {top: 30px; opacity: 1;} to {top: 0; opacity: 0;} }
+
+        @media (max-width: 900px) { 
+            .auth-container { flex-direction: column; max-width: 500px; max-height: 90vh; overflow-y: auto; } 
+            .auth-visual-side { display: none; } 
+            .auth-form-side { padding: 2rem; }
+        }
+
+        /* Animation for Flash Messages */
+.flash-message {
+    transition: opacity 0.5s ease-out;
+}
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="auth-container">
+        <div class="auth-form-side">
+            <div class="brand">
+                <a href="{{ url_for('home') }}">
+                    <img src="{{ url_for('static', filename='images/VaahanSetu-Copy.png') }}" alt="QuickLoad">
+                </a>
+            </div>
+            
+            <div class="title-group">
+                <h1>Create Account</h1>
+                <p>Start your journey with us today.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+      {% for category, message in messages %}
+          <div class="flash-message" style="padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; text-align:center;
+                      background: {{ 'rgba(20, 83, 45, 0.4)' if category == 'success' else 'rgba(127, 29, 29, 0.4)' }}; 
+                      border: 1px solid {{ '#4ade80' if category == 'success' else '#f87171' }};
+                      color: {{ '#4ade80' if category == 'success' else '#f87171' }};">
+              {{ message }}
+          </div>
+      {% endfor %}
+  {% endif %}
+{% endwith %}
+
+            <form action="{{ url_for('register') }}" method="POST" id="register-form" novalidate>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <div class="input-box">
+                            <span class="material-symbols-rounded input-icon">person</span>
+                            <input type="text" name="first_name" id="first_name" placeholder="Your First Name" value="{{ form_data.first_name or '' }}" required>
+                        </div>
+                        <div class="error-message">{{ errors.first_name }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <div class="input-box">
+                            <span class="material-symbols-rounded input-icon">person</span>
+                            <input type="text" name="last_name" id="last_name" placeholder="Your Last Name" value="{{ form_data.last_name or '' }}" required>
+                        </div>
+                        <div class="error-message">{{ errors.last_name }}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">mail</span>
+                        <input type="email" name="email" id="email" placeholder="Your Email Adddress" value="{{ form_data.email or '' }}" required>
+                    </div>
+                    <div class="error-message">{{ errors.email }}</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" name="password" id="password" placeholder="Create a password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                            <span class="material-symbols-rounded">visibility_off</span>
+                        </button>
+                    </div>
+                    <div id="password-strength-container">
+                        <div id="password-strength"><div id="password-strength-bar"></div></div>
+                        <span id="password-strength-text"></span>
+                    </div>
+                    <div class="error-message">{{ errors.password }}</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">lock_reset</span>
+                        <input type="password" name="confirm_password" id="confirm-password" placeholder="Repeat password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirm-password', this)">
+                            <span class="material-symbols-rounded">visibility_off</span>
+                        </button>
+                    </div>
+                    <div class="error-message">{{ errors.confirm_password }}</div>
+                </div>
+
+                <div class="terms-group">
+                    <input type="checkbox" name="terms" id="terms" required>
+                    <label for="terms" style="cursor:pointer; display:inline;">I agree to the <span class="terms-link" id="terms-link">Terms & Conditions</span></label>
+                </div>
+
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+
+            <div class="login-section">
+                <span>Already have an account?</span>
+                <a href="{{ url_for('login') }}" class="login-link">Login</a>
+            </div>
+        </div>
+
+        <div class="auth-visual-side" style="justify-content: center; gap: 2rem;">
+    <div class="visual-content">
+        <h2>Join the Future<br>of Logistics.</h2>
+        <p>Create your account today to access instant vehicle booking, real-time tracking, and verified drivers.</p>
+    </div>
+
+    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.9);">
+        <div>&copy; {{ now.year if now else 2026 }} QuickLoad. All rights reserved.</div>
+        <div style="margin-top: 4px; font-weight: 600; color: #ffffff;">Developed by Team Unique</div>
+    </div>
+</div>
+    </div>
+
+    <div id="terms-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 style="font-size:1.5rem; font-weight:700;">Terms & Conditions</h2>
+                <button id="close-modal" class="close-btn"><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="modal-body">
+                <h3>1. Introduction</h3>
+                <p>Welcome to QuickLoad. By creating an account, you agree to comply with our policies...</p>
+                <br>
+                <h3>2. User Responsibilities</h3>
+                <p>You are responsible for maintaining the confidentiality of your account credentials...</p>
+                <br>
+                <h3>3. Privacy Policy</h3>
+                <p>Your data is secure with us. We do not share your personal information without consent...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        // --- 1. PARTICLE ANIMATION ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const particleCount = 60; 
+        const connectionDistance = 150; 
+        
+        // Updated colors for Light Mode (Red dots, Red lines)
+        const particleColor = 'rgba(220, 38, 38, 0.4)'; // Red
+        const lineColor = '220, 38, 38'; 
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = particleColor; ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(); particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < connectionDistance) {
+                        ctx.beginPath();
+                        const opacity = 1 - (dist / connectionDistance);
+                        ctx.strokeStyle = `rgba(${lineColor}, ${opacity * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles();
+        });
+        initParticles(); animateParticles();
+
+        // --- 2. FORM INTERACTION ---
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('span');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.textContent = "visibility";
+            } else {
+                input.type = "password";
+                icon.textContent = "visibility_off";
+            }
+        }
+
+        // Terms Modal
+        const termsModal = document.getElementById('terms-modal');
+        document.getElementById('terms-link').addEventListener('click', () => termsModal.classList.add('visible'));
+        document.getElementById('close-modal').addEventListener('click', () => termsModal.classList.remove('visible'));
+        termsModal.addEventListener('click', (e) => { if(e.target === termsModal) termsModal.classList.remove('visible'); });
+
+        // Password Strength
+        const passwordInput = document.getElementById('password');
+        const strengthContainer = document.getElementById('password-strength-container');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+
+        passwordInput.addEventListener('input', () => {
+            const val = passwordInput.value;
+            if(val.length > 0) strengthContainer.style.display = 'flex';
+            else strengthContainer.style.display = 'none';
+
+            let score = 0;
+            if(val.length >= 8) score++;
+            if(/[A-Z]/.test(val)) score++;
+            if(/[0-9]/.test(val)) score++;
+            if(/[^A-Za-z0-9]/.test(val)) score++;
+
+            let color = '#ef4444'; // weak
+            let width = '25%';
+            let label = 'Weak';
+
+            if(score >= 4) { color = '#10b981'; width = '100%'; label = 'Strong'; }
+            else if(score >= 2) { color = '#f59e0b'; width = '60%'; label = 'Medium'; }
+
+            strengthBar.style.width = width;
+            strengthBar.style.backgroundColor = color;
+            strengthText.textContent = label;
+            strengthText.style.color = color;
+        });
+
+        // Flash Toast
+        function showToast(msg, isSuccess) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.style.backgroundColor = isSuccess ? '#10b981' : '#f43f5e';
+            t.className = "show";
+            setTimeout(() => t.className = t.className.replace("show", ""), 3000);
+        }
+
+        // --- AUTO-DISMISS FLASH MESSAGES (3 SECONDS) ---
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.flash-message'); 
+        alerts.forEach(alert => {
+            alert.style.opacity = "0"; // Start fade out
+            setTimeout(() => alert.remove(), 500); // Remove from DOM after fade
+        });
+    }, 3000); // Wait 3 seconds before starting fade
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Dashboard - VaahanSetu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <style>
+      :root {
+        --primary-color: #5ca7a8;
+        --dark-color: #1f2937;
+        --sidebar-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      /* --- ALERT MESSAGE STYLES --- */
+      .flash-container {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        z-index: 9999;
+      }
+
+      .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        animation: slideDown 0.4s ease-out;
+        background: white; /* Fallback */
+      }
+
+      .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+      .alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+      .alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+      .close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+      .close-btn:hover { opacity: 1; }
+
+      @keyframes slideDown {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      /* --- Sidebar Navigation --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        color: #d1d5db;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sidebar-logo img { height: 50px; }
+
+      .sidebar-nav { flex-grow: 1; padding: 20px 10px; overflow-y: auto; }
+      .nav-list { list-style: none; }
+      .nav-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); padding: 0 15px; margin: 15px 0 10px 0; }
+
+      .nav-item a {
+        display: flex; align-items: center; gap: 15px; padding: 12px 15px;
+        color: #d1d5db; text-decoration: none; border-radius: 8px;
+        transition: all 0.3s ease; margin-bottom: 5px;
+      }
+      .nav-item a:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+      .nav-item a.active { background-color: var(--primary-color); color: #ffffff; font-weight: 600; }
+
+      /* --- Main Content --- */
+      .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 25px; transition: all 0.3s ease; }
+
+      .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+      .header-left { display: flex; align-items: center; gap: 15px; }
+      .hamburger { display: none; cursor: pointer; font-size: 28px; }
+      .welcome-message h1 { font-size: 1.8rem; font-weight: 700; }
+      .welcome-message p { color: var(--text-light); }
+
+      /* Toggle Switch */
+      .header-right { display: flex; align-items: center; gap: 20px; }
+      .availability-toggle { display: flex; align-items: center; gap: 10px; }
+      .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+      .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+      input:checked + .slider { background-color: var(--success-color); }
+      input:checked + .slider:before { transform: translateX(22px); }
+
+      /* Dashboard Grid */
+      .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+      .grid-col-span-2 { grid-column: span 2; }
+
+      .dashboard-card { background-color: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03); }
+      .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .card-title { font-size: 1.2rem; font-weight: 600; margin: 0; }
+
+      /* --- MODERN TRIP REQUEST CARD --- */
+      .trip-request {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+        animation: slideUp 0.5s ease;
+      }
+      .trip-request:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+
+      .req-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #f3f4f6; padding-bottom: 12px; }
+      .req-badge { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+      .req-fare { font-size: 1.4rem; font-weight: 700; color: var(--success-color); }
+
+      .req-body { display: flex; flex-direction: column; gap: 0; margin-bottom: 15px; position: relative; }
+      /* Vertical Line Connector */
+      .req-connector { position: absolute; left: 11px; top: 28px; bottom: 28px; width: 2px; background: #e5e7eb; z-index: 0; }
+      
+      .req-row { display: flex; align-items: flex-start; gap: 15px; position: relative; z-index: 1; padding: 5px 0; }
+      .req-icon { font-size: 24px; color: var(--text-light); background: #fff; }
+      .req-icon.source { color: var(--primary-color); }
+      .req-icon.dest { color: var(--danger-color); }
+      
+      .req-info .label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+      .req-info .value { font-size: 1rem; font-weight: 500; color: var(--dark-color); line-height: 1.3; }
+
+      .req-meta { display: flex; gap: 15px; background: #f9fafb; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
+      .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: 600; color: var(--text-color); }
+      .meta-item span { font-size: 18px; color: var(--text-light); }
+
+      .trip-actions { display: flex; gap: 12px; }
+      .action-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+      .btn-accept { background-color: var(--dark-color); color: white; }
+      .btn-accept:hover { background-color: #000; }
+      .btn-decline { background-color: white; border: 1px solid #e5e7eb; color: var(--text-color); }
+      .btn-decline:hover { background-color: #f3f4f6; color: var(--danger-color); border-color: #fecaca; }
+
+      /* Summary Section */
+      .summary-card { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 10px; border-radius: 12px; transition: background 0.2s; }
+      .summary-card:hover { background: #f9fafb; }
+      .summary-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: #e0e7ff; color: #4338ca; }
+      .summary-info .value { font-size: 1.4rem; font-weight: 700; color: var(--dark-color); }
+      .summary-info .label { color: var(--text-light); font-size: 0.85rem; font-weight: 500; }
+
+      .badge-count { background: var(--danger-color); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 5px; }
+
+      @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+      /* Responsive */
+      @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: 1fr; } .grid-col-span-2 { grid-column: span 1; } }
+      @media (max-width: 992px) { .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } .main-content { margin-left: 0; width: 100%; } .hamburger { display: block; } }
+
+    /* Red Logout Button Styles */
+      .nav-item a.logout-btn {
+        background-color: transparent; /* Transparent by default */
+        color: #dc2626 !important; /* Red Text */ 
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+      
+      /* Hover State: Light Red Background */
+      .nav-item a.logout-btn:hover {
+        background-color: #fef2f2; /* Very Light Red */
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="sidebar-logo">
+          <img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="VaahanSetu Logo" />
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-title">Menu</li>
+          <li class="nav-item"><a href="#" class="active"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a></li>
+          <li class="nav-item"><a href="{{ url_for('trip_requests') }}"><span class="material-symbols-outlined">notifications_active</span><span>Trip Requests</span></a></li>
+          <li class="nav-item"><a href="{{ url_for('my_trips') }}"><span class="material-symbols-outlined">alt_route</span><span>My Trips</span></a></li>
+          
+          <li class="nav-title">Manage</li>
+          <li class="nav-item"><a href="{{ url_for('my_vehicles') }}"><span class="material-symbols-outlined">local_shipping</span><span>My Vehicles</span></a></li>
+          <li class="nav-item"><a href="{{ url_for('my_earnings') }}"><span class="material-symbols-outlined">payments</span><span>Earnings</span></a></li>
+          
+          <li class="nav-title">Account</li>
+          <li class="nav-item"><a href="{{ url_for('my_profile') }}"><span class="material-symbols-outlined">account_circle</span><span>My Profile</span></a></li>
+          <li class="nav-item"><a href="{{ url_for('support') }}"><span class="material-symbols-outlined">help</span><span>Support</span></a></li>
+          <li class="nav-item">
+            <a href="/driver_logout" class="logout-btn">
+              <span class="material-symbols-outlined">logout</span><span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <header class="main-header">
+        <div class="header-left">
+          <span class="material-symbols-outlined hamburger" id="hamburgerBtn">menu</span>
+          <div class="welcome-message">
+            <h1>Welcome, {{ session['driver_name'].split(' ')[0] }}!</h1>
+            <p>You are currently <strong>Online</strong> and visible to customers.</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="availability-toggle">
+            <span class="availability-label">Online</span>
+            <label class="switch">
+              <input type="checkbox" id="availabilitySwitch" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <div class="dashboard-grid">
+        <div class="grid-col-span-2">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2 class="card-title">Live Trip Requests <span class="badge-count" id="requestCount">{{ pending_trips|length }}</span></h2>
+            </div>
+            
+            <div id="liveRequestsList">
+                {% if pending_trips %}
+                    {% for trip in pending_trips %}
+                    <div class="trip-request" id="request-{{ trip.id }}">
+                        <div class="req-header">
+                            <span class="req-badge">New Request</span>
+                            <span class="req-fare">{{ trip.fare }}</span>
+                        </div>
+                        
+                        <div class="req-body">
+                            <div class="req-connector"></div>
+                            <div class="req-row">
+                                <span class="material-symbols-outlined req-icon source">radio_button_checked</span>
+                                <div class="req-info">
+                                    <div class="label">Pickup Location</div>
+                                    <div class="value">{{ trip.pickup_location.split(',')[0] }}</div>
+                                </div>
+                            </div>
+                            <div class="req-row">
+                                <span class="material-symbols-outlined req-icon dest">location_on</span>
+                                <div class="req-info">
+                                    <div class="label">Drop Location</div>
+                                    <div class="value">{{ trip.drop_location.split(',')[0] }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="req-meta">
+                            <div class="meta-item">
+                                <span class="material-symbols-outlined">weight</span> {{ trip.load_weight }} kg
+                            </div>
+                            <div class="meta-item">
+                                <span class="material-symbols-outlined">schedule</span> Now
+                            </div>
+                        </div>
+
+                        <div class="trip-actions">
+                            <button class="action-btn btn-decline" onclick="handleDecline(this, {{ trip.id }})">
+                                <span class="material-symbols-outlined">close</span> Decline
+                            </button>
+                            <button class="action-btn btn-accept" onclick='handleAccept(this, {{ trip | tojson | safe }})'>
+                                <span class="material-symbols-outlined">check</span> Accept Trip
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div id="emptyRequests" style="{% if pending_trips %}display:none;{% endif %} text-align:center; padding:50px 20px; color:var(--text-light);">
+                    <div style="background:#f3f4f6; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;">
+                        <span class="material-symbols-outlined" style="font-size: 40px; color:#9ca3af;">radar</span>
+                    </div>
+                    <h3 style="font-size:1.1rem; color:var(--dark-color); margin-bottom:5px;">Searching for trips...</h3>
+                    <p style="font-size:0.9rem;">Stay online! New requests will appear here instantly.</p>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="dashboard-card">
+            <h2 class="card-title" style="margin-bottom: 20px">Today's Summary</h2>
+            <div class="summary-card">
+                <div class="summary-icon"><span class="material-symbols-outlined">payments</span></div>
+                <div class="summary-info">
+                    <div class="value">{{ earnings }}</div>
+                    <div class="label">Total Earnings</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon"><span class="material-symbols-outlined">alt_route</span></div>
+                <div class="summary-info">
+                    <div class="value">{{ completed_count }}</div>
+                    <div class="label">Completed Trips</div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        // 1. Sidebar Toggle
+        document.getElementById("hamburgerBtn").addEventListener("click", () => {
+          document.getElementById("sidebar").classList.toggle("open");
+        });
+
+        // 2. Real-time SocketIO Listener (UPDATED HTML STRUCTURE & FIX)
+        socket.on('new_trip_request', (data) => {
+            const list = document.getElementById('liveRequestsList');
+            const emptyMsg = document.getElementById('emptyRequests');
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            // Clean data for displaying only first part of address
+            const pickupShort = data.pickup ? data.pickup.split(',')[0] : 'Pickup';
+            const dropShort = data.drop ? data.drop.split(',')[0] : 'Drop';
+
+            const newRequest = document.createElement('div');
+            newRequest.className = 'trip-request';
+            newRequest.id = `request-${data.trip_id}`;
+            
+            // --- FIX START: Properly escape JSON for the onclick attribute ---
+            // We use double quotes for the attribute and replace double quotes in JSON with &quot;
+            newRequest.innerHTML = `
+                <div class="req-header">
+                    <span class="req-badge">New Request</span>
+                    <span class="req-fare">${data.fare}</span>
+                </div>
+                
+                <div class="req-body">
+                    <div class="req-connector"></div>
+                    <div class="req-row">
+                        <span class="material-symbols-outlined req-icon source">radio_button_checked</span>
+                        <div class="req-info">
+                            <div class="label">Pickup Location</div>
+                            <div class="value">${pickupShort}</div>
+                        </div>
+                    </div>
+                    <div class="req-row">
+                        <span class="material-symbols-outlined req-icon dest">location_on</span>
+                        <div class="req-info">
+                            <div class="label">Drop Location</div>
+                            <div class="value">${dropShort}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="req-meta">
+                    <div class="meta-item">
+                        <span class="material-symbols-outlined">weight</span> ${data.weight} kg
+                    </div>
+                    <div class="meta-item">
+                        <span class="material-symbols-outlined">schedule</span> Just Now
+                    </div>
+                </div>
+
+                <div class="trip-actions">
+                    <button class="action-btn btn-decline" onclick="handleDecline(this, ${data.trip_id})">
+                        <span class="material-symbols-outlined">close</span> Decline
+                    </button>
+                    <button class="action-btn btn-accept" onclick="handleAccept(this, ${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                        <span class="material-symbols-outlined">check</span> Accept Trip
+                    </button>
+                </div>
+            `;
+            // --- FIX END ---
+            
+            list.prepend(newRequest);
+            updateCounter();
+        });
+
+        function updateCounter() {
+            const count = document.querySelectorAll('.trip-request').length;
+            const badge = document.getElementById('requestCount');
+            if (badge) badge.innerText = count;
+        }
+
+        // 3. Action Handlers
+        function handleDecline(btn, tripId) {
+            const card = document.getElementById(`request-${tripId}`);
+            card.style.opacity = '0.5'; // Visual feedback
+            
+            fetch(`/decline_trip/${tripId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    card.style.transform = 'translateX(100px)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        updateCounter();
+                        if (document.querySelectorAll('.trip-request').length === 0) {
+                            document.getElementById('emptyRequests').style.display = 'block';
+                        }
+                    }, 300);
+                }
+            });
+        }
+
+        function handleAccept(btn, tripData) {
+            console.log("Accepting trip:", tripData); // Debug log
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Processing...';
+            
+            const payload = { trip_id: tripData.id || tripData.trip_id };
+            fetch('/accept_trip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.href = "/driver/my-trips";
+                } else {
+                    alert("Error accepting trip: " + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined">check</span> Accept Trip';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">check</span> Accept Trip';
+                alert("Network error occurred.");
+            });
+        }
+
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 4000);
+    </script>
+  </body>
+</html>

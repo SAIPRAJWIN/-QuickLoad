@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Drivers - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        /* Reuse previous variables */
+        :root {
+            --primary-color:#c9a24d;
+            --dark-color: #1f2937;
+            --header-bg: #111827;
+            --main-bg: #f9fafb;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --warning-bg: #ffedd5;
+            --warning-text: #9a3412;
+            --info-bg: #e0f2fe;
+            --info-text: #0369a1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Poppins", sans-serif; background-color: var(--main-bg); color: var(--text-color); min-height: 100vh; }
+
+        /* --- Header & Layout --- */
+        .top-header { background-color: var(--header-bg); color: #ffffff; padding: 0 5%; height: 70px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1001; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-left { display: flex; align-items: center; gap: 40px; }
+        .logo img { height: 45px; }
+        .top-nav-list { display: flex; list-style: none; gap: 10px; }
+        .top-nav-item a { color: #d1d5db; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .top-nav-item a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .top-nav-item a.active { background: var(--primary-color); color: #fff; font-weight: 600; }
+        .logout-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; background: var(--danger-bg); color: var(--danger-text); text-decoration: none; font-weight: 600; transition: 0.3s; }
+
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 5%; width: 100%; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: var(--dark-color); }
+
+        /* Summary Cards */
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .card { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .card-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .card-info .value { font-size: 2rem; font-weight: 700; color: var(--dark-color); }
+        .card-info .label { color: var(--text-light); }
+
+        /* Table */
+        .search-container { margin-bottom: 20px; }
+        .search-bar { width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 50px; border: 1px solid var(--border-color); font-family: inherit; }
+        .table-container { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 10px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        .data-table th { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-active { background: var(--success-bg); color: var(--success-text); }
+        .status-suspended { background: var(--warning-bg); color: var(--warning-text); }
+        .status-ongoing { background: var(--info-bg); color: var(--info-text); animation: pulse 2s infinite; }
+
+        .action-btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); background: #f9fafb; color: var(--text-color); display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: 0.2s; }
+        .action-btn:hover { background: #e5e7eb; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content-wide { background: #fff; border-radius: 20px; width: 95%; max-width: 1100px; display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 0; overflow-y: auto; display: flex; flex-direction: column; height: 100%; background: #f9fafb; }
+        
+        .profile-header-section { background: white; padding: 2rem; display: flex; gap: 25px; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .profile-large-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f3f4f6; }
+        
+        .modal-tabs { display: flex; background: white; padding: 0 2rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; }
+        .m-tab-btn { padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--text-light); border-bottom: 3px solid transparent; }
+        .m-tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: 700; }
+
+        .m-tab-content { display: none; padding: 2rem; }
+        .m-tab-content.active { display: block; animation: slideUp 0.3s; }
+
+        /* Grids & Cards */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+        .info-item label { display: block; font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
+        .info-item p { font-size: 1rem; font-weight: 500; color: var(--dark-color); }
+
+        .vehicle-list-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        /* --- FIXED VEHICLE CARD ALIGNMENT --- */
+        .vehicle-card { 
+            background: white; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 15px 20px; 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .vehicle-info { 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+        }
+        .vehicle-thumb { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            background: #f3f4f6; 
+        }
+        .vehicle-actions { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; /* Ensures buttons are vertically centered */
+        }
+        /* ------------------------------------ */
+
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .doc-card { background: white; border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; text-align: center; text-decoration: none; color: var(--dark-color); display: flex; flex-direction: column; align-items: center; gap: 10px; transition: 0.2s; }
+        .doc-card:hover { background: #f0fdf4; border-color: var(--primary-color); }
+
+        /* TRIP CARD STYLES */
+        .trip-section-title { font-size: 0.9rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; margin-bottom: 15px; letter-spacing: 0.5px; border-left: 4px solid var(--primary-color); padding-left: 10px; }
+        .trip-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        
+        .tc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+        .tc-pnr { font-weight: 700; color: var(--primary-color); }
+        
+        .tc-route { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 600; color: var(--dark-color); margin-bottom: 10px; }
+        .tc-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; }
+        .tc-meta div p { margin: 0; font-size: 0.9rem; font-weight: 500; }
+        .tc-meta div label { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; font-weight: 700; }
+
+        /* Buttons */
+        .modal-footer { padding: 1.5rem; background: white; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* Unified Button Styles */
+        .btn-suspend, .btn-activate, .btn-delete, .btn-link {
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            text-decoration: none;
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            height: 40px; /* Fixed height for alignment */
+            font-size: 0.9rem;
+        }
+
+        .btn-suspend { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
+        .btn-activate { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
+        .btn-delete { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+        .btn-link { background: white; color: var(--primary-color); border: 1px solid var(--border-color); }
+        .btn-link:hover { background: #f3f4f6; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+         .header-actions { display: flex; align-items: center; gap: 20px; }
+      .admin-info { display: flex; align-items: center; gap: 10px; color: #d1d5db; font-size: 0.9rem; }
+        .admin-avatar { width: 32px; height: 32px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; }
+
+        /* --- Flash Message Notification Styles --- */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 9999;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+    background: white;
+}
+
+.alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+.close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+.close-btn:hover { opacity: 1; }
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- Custom Confirmation Modal Styles --- */
+.confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px); animation: fadeIn 0.2s;
+}
+.confirm-overlay.active { display: flex; }
+
+.confirm-box {
+    background: white; width: 90%; max-width: 420px; padding: 30px;
+    border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    text-align: center; transform: scale(0.9); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.confirm-overlay.active .confirm-box { transform: scale(1); }
+
+.confirm-icon { 
+    width: 70px; height: 70px; background: #fee2e2; color: #dc2626;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+.confirm-icon .material-symbols-outlined { font-size: 36px; }
+
+.confirm-title { font-size: 1.4rem; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+.confirm-desc { font-size: 1rem; color: #6b7280; margin-bottom: 30px; line-height: 1.5; }
+
+.confirm-actions { display: flex; gap: 15px; }
+.confirm-btn { 
+    flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; 
+    cursor: pointer; border: none; font-size: 1rem; transition: all 0.2s;
+}
+.btn-cancel-modal { background: #f3f4f6; color: #374151; }
+.btn-cancel-modal:hover { background: #e5e7eb; }
+
+.btn-confirm-modal { background: #dc2626; color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+.btn-confirm-modal:hover { background: #b91c1c; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="logo"><img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="Logo"></div>
+            <nav>
+                <ul class="top-nav-list">
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" >
+                            <span class="material-symbols-outlined">dashboard</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_driver_applications') }}">
+                            <span class="material-symbols-outlined">assignment_ind</span> Applications
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_drivers') }}" class="active">
+                            <span class="material-symbols-outlined">group</span> Drivers
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_users') }}">
+                            <span class="material-symbols-outlined">people</span> Customers
+                        </a>
+                    </li>
+
+                    <li class="top-nav-item">
+    <a href="{{ url_for('manage_trips') }}" class="{{ 'active' if request.endpoint == 'manage_trips' else '' }}">
+        <span class="material-symbols-outlined">alt_route</span> Trips
+    </a>
+</li>
+
+<li class="top-nav-item">
+        <a href="{{ url_for('admin_developers') }}">
+            <span class="material-symbols-outlined">engineering</span> Developers
+        </a>
+    </li>
+                </ul>
+            </nav>
+        </div>
+         <div class="header-actions">
+        <a href="{{ url_for('admin_profile') }}" style="text-decoration:none;">
+    <div class="admin-info" style="display:flex; align-items:center; gap:10px; color:#d1d5db; cursor:pointer;">
+        <div class="admin-avatar" style="width:32px; height:32px; background:var(--primary-color); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">
+            {{ session.admin_username[0] | upper }}
+        </div>
+        <span style="font-weight:500;">{{ session.admin_username }}</span>
+    </div>
+</a>
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+          <span class="material-symbols-outlined">logout</span> Logout
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Manage Drivers</h1>
+        </div>
+
+        <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-icon" style="background:#dcfce7; color:#166534;"><span class="material-symbols-outlined">how_to_reg</span></div>
+                <div><div class="value">{{ summary.total_active }}</div><div class="label">Total Drivers</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#e0f2fe; color:#0369a1;"><span class="material-symbols-outlined">local_shipping</span></div>
+                <div><div class="value">{{ summary.on_duty }}</div><div class="label">Currently On Duty</div></div>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background:#ffedd5; color:#9a3412;"><span class="material-symbols-outlined">block</span></div>
+                <div><div class="value">{{ summary.suspended }}</div><div class="label">Suspended</div></div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="driverSearch" class="search-bar" placeholder="Search by name, contact, or ID..." onkeyup="filterDrivers()">
+        </div>
+
+        <div class="table-container">
+            <table class="data-table" id="driverTable">
+                <thead>
+                    <tr>
+                        <th>Driver Name</th>
+                        <th>App ID</th>
+                        <th>Contact</th>
+                        <th>Completed Trips</th>
+                        <th>Current Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for driver in drivers %}
+                    <tr>
+                        <td><strong>{{ driver.full_name }}</strong></td>
+                        <td>{{ driver.application_id }}</td>
+                        <td>{{ driver.contact_number }}</td>
+                        <td><span class="status-badge" style="background:#f3f4f6; color:#374151;">{{ driver.completed_count }}</span></td>
+                        <td>
+                            {% if driver.application_status == 'Suspended' %}
+                                <span class="status-badge status-suspended">Suspended</span>
+                            {% elif driver.active_trip %}
+                                <span class="status-badge status-ongoing">On Trip</span>
+                            {% else %}
+                                <span class="status-badge status-active">Available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick='viewDriver({{ driver.id }})'>
+                                <span class="material-symbols-outlined">visibility</span> Profile
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="viewDriverModal" class="modal-overlay">
+        <div class="modal-content-wide">
+            <div class="modal-header">
+                <h2 class="modal-title">Driver Profile</h2>
+                <button onclick="closeModal()" style="border:none; background:none; font-size:2rem; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div class="profile-header-section">
+                <img id="mProfilePic" src="" class="profile-large-img">
+                <div>
+                    <h1 id="mFullName" style="font-size:1.8rem; font-weight:700; margin:0;"></h1>
+                    <p id="mAppId" style="color:var(--text-light); font-size:0.9rem; margin-top:5px;"></p>
+                    <div style="margin-top:10px;" id="mStatusContainer"></div>
+                </div>
+            </div>
+
+            <div class="modal-tabs">
+                <button class="m-tab-btn active" onclick="switchTab('t-personal')">Personal Info</button>
+                <button class="m-tab-btn" onclick="switchTab('t-trips')">Trip History</button>
+                <button class="m-tab-btn" onclick="switchTab('t-vehicles')">Vehicles</button>
+                <button class="m-tab-btn" onclick="switchTab('t-docs')">Documents</button>
+            </div>
+
+            <div class="modal-body">
+                <div id="t-personal" class="m-tab-content active">
+                    <div class="info-grid">
+                        <div class="info-item"><label>Email</label><p id="mEmail"></p></div>
+                        <div class="info-item"><label>Phone</label><p id="mPhone"></p></div>
+                        <div class="info-item"><label>DOB</label><p id="mDob"></p></div>
+                        <div class="info-item"><label>Address</label><p id="mAddress"></p></div>
+                        <div class="info-item"><label>License No</label><p id="mLicense"></p></div>
+                        <div class="info-item"><label>Expiry</label><p id="mLicenseExp"></p></div>
+                    </div>
+                    <hr style="margin:20px 0; border:0; border-top:1px solid #e5e7eb;">
+                    <div class="info-grid">
+                        <div class="info-item"><label>Bank Name</label><p id="mBank"></p></div>
+                        <div class="info-item"><label>Account No</label><p id="mAccNo"></p></div>
+                        <div class="info-item"><label>IFSC Code</label><p id="mIfsc"></p></div>
+                    </div>
+                </div>
+
+                <div id="t-trips" class="m-tab-content">
+                    <div id="activeTripContainer"></div>
+                    <div class="trip-section-title">Completed History</div>
+                    <div id="historyTripContainer"></div>
+                </div>
+
+                <div id="t-vehicles" class="m-tab-content">
+                    <div id="vehicleList" class="vehicle-list-grid"></div>
+                </div>
+
+                <div id="t-docs" class="m-tab-content">
+                    <div class="doc-grid" id="docLinksContainer"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div id="suspendDriverContainer"></div>
+                <button id="deleteDriverBtn" class="btn-delete" onclick="confirmDelete()">
+                    <span class="material-symbols-outlined">delete</span> Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon" id="confirmIcon">
+            <span class="material-symbols-outlined">warning</span>
+        </div>
+        <h3 class="confirm-title" id="confirmTitle">Are you sure?</h3>
+        <p class="confirm-desc" id="confirmDesc">Do you really want to perform this action?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel-modal" onclick="closeConfirm()">Cancel</button>
+            <button class="confirm-btn btn-confirm-modal" id="confirmYesBtn">Yes, Proceed</button>
+        </div>
+    </div>
+</div>
+
+    <script>
+
+    // --- Custom Modal Logic ---
+function showConfirm(title, message, callback, type = 'danger') {
+    const modal = document.getElementById('customConfirmModal');
+    const iconBox = document.getElementById('confirmIcon');
+    const iconSpan = iconBox.querySelector('span');
+    const yesBtn = document.getElementById('confirmYesBtn');
+
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmDesc').innerText = message;
+
+    if (type === 'danger') {
+        iconBox.style.background = '#fee2e2';
+        iconBox.style.color = '#dc2626';
+        iconSpan.innerText = 'warning';
+        yesBtn.style.background = '#dc2626';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.3)';
+        yesBtn.innerText = "Yes, Delete";
+    } else if (type === 'success') {
+        iconBox.style.background = '#dcfce7';
+        iconBox.style.color = '#166534';
+        iconSpan.innerText = 'check_circle';
+        yesBtn.style.background = '#166534';
+        yesBtn.style.boxShadow = '0 4px 12px rgba(22, 101, 52, 0.3)';
+        yesBtn.innerText = "Yes, Activate";
+    } else { // Warning/Suspend
+        iconBox.style.background = '#fff7ed';
+        iconBox.style.color = '#c2410c';
+        iconSpan.innerText = 'block';
+        yesBtn.style.background = '#c2410c';
+        yesBtn.style.boxShadow = 'none';
+        yesBtn.innerText = "Yes, Suspend";
+    }
+
+    yesBtn.onclick = function() {
+        callback();
+        closeConfirm();
+    };
+
+    modal.classList.add('active');
+}
+
+function closeConfirm() {
+    document.getElementById('customConfirmModal').classList.remove('active');
+}
+      const driversData = {{ drivers|tojson|safe }};
+      
+      function filterDrivers() {
+        let input = document.getElementById('driverSearch').value.toUpperCase();
+        let rows = document.getElementById('driverTable').getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            let text = rows[i].textContent.toUpperCase();
+            rows[i].style.display = text.indexOf(input) > -1 ? "" : "none";
+        }
+      }
+
+      function viewDriver(id) {
+        const d = driversData.find(drv => drv.id === id);
+        if (!d) return;
+
+        // Basic Info
+        document.getElementById('mProfilePic').src = d.profile_photo_url || '/static/images/default_profile.png';
+        document.getElementById('mFullName').textContent = d.full_name;
+        document.getElementById('mAppId').textContent = "App ID: " + d.application_id;
+        
+        const statusHtml = d.application_status === 'Approved' 
+            ? `<span class="status-badge status-active">Active Account</span>` 
+            : `<span class="status-badge status-suspended">Suspended Account</span>`;
+        document.getElementById('mStatusContainer').innerHTML = statusHtml;
+
+        // Populate Personal & Bank
+        document.getElementById('mEmail').textContent = d.email;
+        document.getElementById('mPhone').textContent = d.contact_number;
+        document.getElementById('mDob').textContent = d.dob;
+        document.getElementById('mAddress').textContent = d.address + ", " + d.city;
+        document.getElementById('mLicense').textContent = d.license_number;
+        document.getElementById('mLicenseExp').textContent = d.license_expiry_date;
+        document.getElementById('mBank').textContent = d.bank_name;
+        document.getElementById('mAccNo').textContent = d.acc_number;
+        document.getElementById('mIfsc').textContent = d.ifsc_code;
+
+        // --- RENDER TRIPS ---
+        const activeContainer = document.getElementById('activeTripContainer');
+        const historyContainer = document.getElementById('historyTripContainer');
+        activeContainer.innerHTML = '';
+        historyContainer.innerHTML = '';
+
+        const activeTrips = d.trips.filter(t => t.status === 'Accepted' || t.status === 'Ongoing');
+        const pastTrips = d.trips.filter(t => t.status === 'Completed' || t.status === 'Cancelled' || t.status === 'Rejected');
+
+        if(activeTrips.length > 0) {
+            activeContainer.innerHTML = `<div class="trip-section-title" style="color:#0369a1; border-color:#0369a1;">Active Duty</div>`;
+            activeTrips.forEach(t => activeContainer.innerHTML += createTripCard(t));
+        }
+
+        if(pastTrips.length === 0) {
+            historyContainer.innerHTML = '<p style="text-align:center; color:#6b7280; padding:20px;">No completed trips yet.</p>';
+        } else {
+            pastTrips.forEach(t => historyContainer.innerHTML += createTripCard(t));
+        }
+
+        // --- RENDER DOCS ---
+        const docContainer = document.getElementById('docLinksContainer');
+        docContainer.innerHTML = '';
+        const docs = [
+            {name: 'Driving License', url: d.dl_url}, {name: 'Aadhaar', url: d.aadhaar_url},
+            {name: 'PAN Card', url: d.pan_url}, {name: 'Driver Insurance', url: d.insurance_url},
+            {name: 'Primary RC', url: d.rc_url}
+        ];
+        docs.forEach(doc => {
+            if(doc.url) {
+                docContainer.innerHTML += `
+                    <a href="${doc.url}" target="_blank" class="doc-card">
+                        <span class="material-symbols-outlined" style="font-size:30px; color:#5ca7a8;">description</span>
+                        <span style="font-weight:600;">${doc.name}</span>
+                    </a>`;
+            }
+        });
+
+        // --- RENDER VEHICLES (WITH ALIGNMENT FIX) ---
+        const vContainer = document.getElementById('vehicleList');
+        vContainer.innerHTML = '';
+        d.vehicles.forEach(v => {
+            const isSuspended = v.status === 'Suspended';
+            const actionBtn = isSuspended 
+                ? `<button onclick="toggleVehicleStatus(${v.id}, 'activate')" class="btn-activate">Activate</button>`
+                : `<button onclick="toggleVehicleStatus(${v.id}, 'suspend')" class="btn-suspend">Suspend</button>`;
+            
+            let vDocs = '';
+            if(v.rc_url) vDocs += `<a href="${v.rc_url}" target="_blank" class="btn-link">RC</a>`;
+            if(v.ins_url) vDocs += `<a href="${v.ins_url}" target="_blank" class="btn-link">Insurance</a>`;
+
+            vContainer.innerHTML += `
+                <div class="vehicle-card" style="${isSuspended ? 'opacity:0.7; background:#f9fafb;' : ''}">
+                    <div class="vehicle-info">
+                        <img src="${v.photo_url || ''}" class="vehicle-thumb" onerror="this.style.display='none'">
+                        <div>
+                            <h4 style="margin:0;">${v.vehicle_model}</h4>
+                            <p style="margin:2px 0; font-size:0.9rem; color:#6b7280;">${v.vehicle_reg_no} • ${v.vehicle_type}</p>
+                            <span class="status-badge" style="background:${isSuspended?'#fee2e2':'#dcfce7'}; color:${isSuspended?'#991b1b':'#166534'}">${v.status}</span>
+                        </div>
+                    </div>
+                    <div class="vehicle-actions">
+                        ${vDocs}
+                        ${actionBtn}
+                    </div>
+                </div>`;
+        });
+
+        // Suspend Button Logic
+        const suspendBtnContainer = document.getElementById('suspendDriverContainer');
+        if (d.application_status === 'Approved') {
+            suspendBtnContainer.innerHTML = `<button onclick="toggleDriverStatus('${d.application_id}', 'suspend')" class="btn-suspend">Suspend Driver</button>`;
+        } else {
+            suspendBtnContainer.innerHTML = `<button onclick="toggleDriverStatus('${d.application_id}', 'activate')" class="btn-activate">Activate Driver</button>`;
+        }
+        document.getElementById('deleteDriverBtn').setAttribute('onclick', `confirmDelete('${d.application_id}')`);
+
+        document.getElementById('viewDriverModal').classList.add('active');
+      }
+
+      function createTripCard(t) {
+          let statusColor = t.status === 'Completed' ? '#dcfce7' : (t.status === 'Ongoing' ? '#e0f2fe' : '#fef9c3');
+          let statusText = t.status === 'Completed' ? '#166534' : (t.status === 'Ongoing' ? '#0369a1' : '#854d0e');
+          
+          // --- FARE CALCULATION LOGIC ---
+          let fareDisplay = t.fare; // Default to the string (e.g. "₹ 500 + Extra Tolls")
+          
+          if (t.status === 'Completed') {
+              // Extract just the base number string (e.g., "₹ 67,318")
+              let baseFareStr = t.fare.split('+')[0].split('(')[0].trim();
+              
+              // Use the actual total_fare from database if available, or just show the base
+              let totalAmount = t.total_fare || baseFareStr;
+              let tollAmount = t.toll_tax || 0;
+
+              fareDisplay = `
+                <span style="color:#166534; font-weight:700; font-size:1.1rem;">₹ ${totalAmount}</span>
+                <div style="font-size:0.75rem; color:#6b7280; font-weight:500; margin-top:2px;">
+                    (Base: ${baseFareStr} + Toll: ₹ ${tollAmount})
+                </div>
+              `;
+          }
+          // -----------------------------
+
+          return `
+            <div class="trip-card">
+                <div class="tc-header">
+                    <div>
+                        <span class="tc-pnr">PNR: ${t.pnr_number}</span>
+                        <div style="font-size:0.8rem; color:#6b7280;">${t.booking_date}</div>
+                    </div>
+                    <span class="status-badge" style="background:${statusColor}; color:${statusText};">${t.status}</span>
+                </div>
+                <div class="tc-route">
+                    <span class="material-symbols-outlined" style="color:#5ca7a8;">radio_button_checked</span>
+                    ${t.pickup_location.split(',')[0]} 
+                    <span class="material-symbols-outlined" style="color:#9ca3af; font-size:1.2rem;">arrow_right_alt</span> 
+                    <span class="material-symbols-outlined" style="color:#dc2626;">location_on</span>
+                    ${t.drop_location.split(',')[0]}
+                </div>
+                <div class="tc-meta">
+                    <div><label>Customer</label><p>${t.customer_name}</p></div>
+                    <div><label>Phone</label><p>${t.customer_phone}</p></div>
+                    <div><label>Fare</label><div>${fareDisplay}</div></div> <div><label>Load</label><p>${t.load_weight}</p></div>
+                </div>
+            </div>`;
+      }
+
+      function closeModal() { document.getElementById('viewDriverModal').classList.remove('active'); }
+      
+      function switchTab(tabId) {
+        document.querySelectorAll('.m-tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.m-tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+      }
+
+      function toggleDriverStatus(appId, action) {
+    const isSuspend = action === 'suspend';
+    showConfirm(
+        isSuspend ? "Suspend Driver?" : "Activate Driver?",
+        isSuspend ? "The driver will strictly be blocked from accepting new trips." : "The driver will be allowed to accept trips again.",
+        () => window.location.href = `/admin/${action}_driver/${appId}`,
+        isSuspend ? 'warning' : 'success'
+    );
+}
+
+function toggleVehicleStatus(vid, action) {
+    const isSuspend = action === 'suspend';
+    showConfirm(
+        isSuspend ? "Suspend Vehicle?" : "Activate Vehicle?",
+        isSuspend ? "This vehicle will be hidden from customers." : "This vehicle will be visible for bookings again.",
+        () => window.location.href = `/admin/${action}_vehicle/${vid}`,
+        isSuspend ? 'warning' : 'success'
+    );
+}
+
+function confirmDelete(appId) {
+    showConfirm(
+        "Delete Driver?",
+        "This will permanently remove the driver, their vehicles, and history. This action cannot be undone.",
+        () => window.location.href = `/admin/delete/${appId}`,
+        'danger'
+    );
+}
+
+      // Auto-dismiss alerts after 4 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.transition = "opacity 0.5s ease";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 4000);
+    </script>
+</body>
+</html>

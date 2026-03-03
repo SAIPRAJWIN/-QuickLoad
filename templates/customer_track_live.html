@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Tracking | VaahanSetu</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --primary: #dc2626;
+            --secondary: #1e293b;
+            --success: #10b981;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #f1f5f9; overflow: hidden; }
+        
+        /* Professional Navigation */
+        .navbar { 
+            position: absolute; top: 20px; left: 20px; right: 20px; 
+            background: white; padding: 12px 25px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1001; 
+        }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .nav-logo img { height: 35px; width: auto; }
+        .back-home { 
+            display: flex; align-items: center; gap: 8px; text-decoration: none; 
+            color: var(--text-main); font-weight: 700; font-size: 0.85rem; 
+            background: #f8fafc; padding: 8px 15px; border-radius: 8px; 
+        }
+
+        /* Map Container */
+        #map { height: 100vh; width: 100%; z-index: 1; }
+
+        /* Tracking Bottom Sheet */
+        .tracking-sheet { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: white; border-top-left-radius: 24px; border-top-right-radius: 24px;
+            padding: 25px 30px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            z-index: 1002; transition: transform 0.3s ease;
+        }
+
+        .sheet-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .pnr-tag { 
+            background: #fee2e2; color: var(--primary); padding: 5px 12px; 
+            border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; 
+        }
+        .trip-status { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .status-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .value { font-size: 14px; font-weight: 700; color: var(--text-main); }
+
+        .btn-call { 
+            background: #10b981; color: white; border: none; padding: 15px; 
+            border-radius: 12px; font-weight: 800; text-decoration: none; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; margin-top: 20px; transition: 0.2s;
+        }
+        .btn-call:hover { background: #059669; transform: translateY(-2px); }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        @media (max-width: 600px) {
+            .navbar { left: 10px; right: 10px; top: 10px; padding: 10px; }
+            .back-home span { display: none; } /* Hide text on small mobile */
+            .tracking-sheet { padding: 20px; }
+        }
+
+        /* Optimized Call Button Styling */
+.btn-call { 
+    background: #10b981; 
+    color: white; 
+    border: none; 
+    padding: 12px 25px; /* Balanced padding */
+    border-radius: 12px; 
+    font-weight: 800; 
+    text-decoration: none; 
+    display: inline-flex; /* Use inline-flex instead of block */
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px;
+    width: auto; /* Allow button to shrink to text size */
+    min-width: 160px; /* Ensures it's still easy to tap on mobile */
+    transition: all 0.2s ease;
+}
+
+.btn-call:hover { 
+    background: #059669; 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="{{ url_for('home') }}" class="nav-logo">
+                <img src="{{ url_for('static', filename='images/VaahanSetu-Copy.png') }}" alt="VaahanSetu">
+            </a>
+            <a href="{{ url_for('home') }}" class="back-home">
+                <span class="material-symbols-outlined">home</span>
+                <span>Back to Home</span>
+            </a>
+        </div>
+        <div class="pnr-tag">{{ trip.pnr_number }}</div>
+    </nav>
+
+    <div id="map"></div>
+
+    <div class="tracking-sheet">
+        <div class="sheet-header">
+            <div>
+                <div class="trip-status">
+                    <div class="status-dot"></div>
+                    <span style="font-weight: 700; font-size: 1.1rem; color: var(--success);">{{ trip.status }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 5px 0 0 0;">Goods are currently in transit</p>
+            </div>
+            <div style="text-align: right;">
+                <div class="label">Trip Fare</div>
+                <div class="value" style="color: var(--primary); font-size: 1.2rem;">{{ trip.fare }}</div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div>
+                <div class="label">Assigned Driver</div>
+                <div class="value">{{ trip.driver_name }}</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Verified Logistics Partner</div>
+            </div>
+            <div style="border-left: 1px solid var(--border); padding-left: 20px;">
+                <div class="label">Vehicle Details</div>
+                <div class="value">{{ trip.vehicle_type_booked }}</div>
+                <div style="font-size: 12px; color: var(--primary); font-weight: 700;">{{ trip.vehicle_reg_no }}</div>
+            </div>
+        </div>
+
+        <a href="tel:{{ trip.driver_phone }}" class="btn-call">
+            <span class="material-symbols-outlined">call</span>
+            Call Driver for Coordination
+        </a>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map using trip coordinates
+        const map = L.map('map', { zoomControl: false }).setView([{{ trip.pickup_lat }}, {{ trip.pickup_lng }}], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        const pickupIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color:#10b981; width:15px; height:15px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.3);'></div>",
+            iconSize: [15, 15],
+            iconAnchor: [7, 7]
+        });
+
+        const dropIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color:#dc2626; width:15px; height:15px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.3);'></div>",
+            iconSize: [15, 15],
+            iconAnchor: [7, 7]
+        });
+
+        L.marker([{{ trip.pickup_lat }}, {{ trip.pickup_lng }}], {icon: pickupIcon}).addTo(map);
+        L.marker([{{ trip.drop_lat }}, {{ trip.drop_lng }}], {icon: dropIcon}).addTo(map);
+
+        // Fetch OSRM Road Path
+        fetch(`https://router.project-osrm.org/route/v1/driving/{{ trip.pickup_lng }},{{ trip.pickup_lat }};{{ trip.drop_lng }},{{ trip.drop_lat }}?overview=full&geometries=geojson`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    const route = L.geoJSON(data.routes[0].geometry, {
+                        style: { color: '#dc2626', weight: 6, opacity: 0.6 }
+                    }).addTo(map);
+                    map.fitBounds(route.getBounds(), { padding: [100, 100] });
+                }
+            });
+    </script>
+</body>
+</html>

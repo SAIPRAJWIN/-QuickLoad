@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Trips - Driver Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <style>
+      :root {
+        --primary-color: #5ca7a8;
+        --dark-color: #1f2937;
+        --sidebar-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-bg: #dcfce7;
+        --success-text: #166534;
+        --pending-bg: #fef9c3;
+        --pending-text: #854d0e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      /* --- Sidebar Navigation (Same as Dashboard) --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        color: #d1d5db;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .sidebar-logo img {
+        height: 50px;
+      }
+      .sidebar-nav {
+        flex-grow: 1;
+        padding: 20px 10px;
+        overflow-y: auto;
+      }
+      .nav-list {
+        list-style: none;
+      }
+      .nav-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-light);
+        padding: 0 15px;
+        margin: 15px 0 10px 0;
+      }
+      .nav-item a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        color: #d1d5db;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 5px;
+      }
+      .nav-item a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+      .nav-item a.active {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      /* --- Main Content Area (Same as Dashboard) --- */
+      .main-content {
+        margin-left: 260px;
+        width: calc(100% - 260px);
+        padding: 25px;
+        transition: all 0.3s ease;
+      }
+
+      /* --- Main Header --- */
+      .main-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .hamburger {
+        display: none;
+        cursor: pointer;
+        font-size: 28px;
+      }
+      .page-title h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      /* --- Tab Navigation --- */
+      .tabs-nav {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 25px;
+      }
+      .tab-btn {
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-light);
+        position: relative;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -1px; /* Overlaps the main border */
+      }
+      .tab-btn.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom-color: var(--primary-color);
+      }
+
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* --- Trip Cards List --- */
+      .trips-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+     /* --- Modern Grid Trip Card --- */
+.trip-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: grid;
+    /* 3 Columns: Route (40%) | Details (35%) | Actions (25%) */
+    grid-template-columns: 1.2fr 1fr 220px; 
+    gap: 30px;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+}
+
+.trip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+
+/* Zone 1: Route Visuals */
+.t-route-section {
+    display: flex;
+    gap: 15px;
+    border-right: 1px solid #f3f4f6; /* Divider */
+    padding-right: 20px;
+}
+.t-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 6px;
+}
+.t-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 2px white; }
+.t-line { width: 2px; height: 35px; background: #e2e8f0; margin: 4px 0; border-radius: 2px; }
+
+.t-info p { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; font-weight: 700; margin: 0 0 2px 0; letter-spacing: 0.5px; }
+.t-info h4 { font-size: 1.05rem; font-weight: 600; color: #1f2937; margin: 0 0 18px 0; line-height: 1.2; }
+
+/* Zone 2: Details Grid */
+.t-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 10px;
+}
+.t-detail-item label { display: block; font-size: 0.7rem; color: #6b7280; font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+.t-detail-item span { display: block; font-size: 0.95rem; font-weight: 600; color: #111827; }
+
+.t-pnr-tag {
+    grid-column: span 2;
+    background: #f0f9ff; color: #0369a1;
+    font-size: 0.8rem; font-weight: 700;
+    padding: 6px 10px; border-radius: 6px;
+    width: fit-content; margin-bottom: 5px;
+}
+
+/* Zone 3: Action Stack */
+.t-action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn-action {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 10px; border-radius: 8px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    text-decoration: none; border: none; transition: 0.2s;
+}
+
+.btn-start { background: #1f2937; color: white; }
+.btn-start:hover { background: black; transform: translateY(-1px); }
+
+.btn-nav { background: white; border: 1px solid #d1d5db; color: #374151; }
+.btn-nav:hover { background: #f9fafb; border-color: #9ca3af; }
+
+.btn-cancel-ghost { 
+    background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; 
+}
+.btn-cancel-ghost:hover { background: #ffe4e6; border-color: #fda4af; }
+
+/* Mobile Responsive */
+@media (max-width: 1100px) {
+    .trip-card { grid-template-columns: 1fr; gap: 20px; }
+    .t-route-section { border-right: none; padding-right: 0; border-bottom: 1px solid #f3f4f6; padding-bottom: 20px; }
+    .t-action-stack { flex-direction: row; }
+}
+@media (max-width: 600px) {
+    .t-action-stack { flex-direction: column; }
+}
+
+      .trip-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+      }
+
+      .trip-route {
+        font-weight: 500;
+      }
+      .trip-route strong {
+        display: block;
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+      .trip-route .material-symbols-outlined {
+        vertical-align: middle;
+        margin: 0 5px;
+        color: var(--text-light);
+      }
+
+      .trip-details {
+    display: flex;
+    flex-direction: column; /* Stacks settlement text */
+    gap: 8px;
+    flex-grow: 1; /* Takes up all available middle space */
+}
+
+     .trip-actions {
+    flex-shrink: 0; /* Prevents the button from shrinking */
+    margin-left: auto; /* Force-pushes to the far right */
+}
+
+      .action-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-align: center;
+        text-decoration: none;
+        background-color: #e05d5d;
+        color: white;
+        border: none;
+      }
+      .action-btn:hover {
+        background-color: #4a8e8f;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+      }
+      .status-upcoming {
+        background-color: #e0e7ff;
+        color: #4338ca;
+      }
+      .status-ongoing {
+        background-color: var(--pending-bg);
+        color: var(--pending-text);
+      }
+      .status-completed {
+        background-color: var(--success-bg);
+        color: var(--success-text);
+      }
+
+      .no-trips {
+        text-align: center;
+        padding: 50px;
+        background-color: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+      }
+
+      /* --- Responsive Design --- */
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+          z-index: 1001;
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+        }
+        .hamburger {
+          display: block;
+        }
+      }
+      @media (max-width: 768px) {
+       
+        .trip-actions {
+          text-align: left;
+          margin-top: 15px;
+        }
+        .action-btn {
+          width: 100%;
+        }
+      }
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Flash Message Notification Styles --- */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 9999;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+    background: white;
+}
+
+.alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+.close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+.close-btn:hover { opacity: 1; }
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+    /* Red Logout Button Styles */
+      .nav-item a.logout-btn {
+        background-color: transparent; /* Transparent by default */
+        color: #dc2626 !important; /* Red Text */ 
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+      
+      /* Hover State: Light Red Background */
+      .nav-item a.logout-btn:hover {
+        background-color: #fef2f2; /* Very Light Red */
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+      }
+
+      /* --- Modern Confirmation Modal --- */
+.confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.confirm-overlay.active { display: flex; }
+
+.confirm-box {
+    background: white; width: 90%; max-width: 420px; padding: 32px;
+    border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    text-align: center; transform: scale(0.95); opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.confirm-overlay.active .confirm-box { transform: scale(1); opacity: 1; }
+
+.confirm-icon-box {
+    width: 64px; height: 64px; background: #fee2e2; color: #dc2626;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+.confirm-icon-box .material-symbols-outlined { font-size: 32px; }
+
+.confirm-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 8px; }
+.confirm-text { font-size: 0.95rem; color: #6b7280; margin-bottom: 28px; line-height: 1.5; }
+
+.confirm-actions { display: flex; gap: 12px; }
+.c-btn {
+    flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; border: none; transition: all 0.2s;
+}
+.c-btn-cancel { background: #f3f4f6; color: #374151; }
+.c-btn-cancel:hover { background: #e5e7eb; }
+.c-btn-danger { background: #dc2626; color: white; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2); }
+.c-btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+
+/* Fade In Animation */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="sidebar-logo">
+          <img
+            src="{{ url_for('static', filename='images/logo-bg.png') }}"
+            alt="QuickLoad Logo"
+          />
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-title">Menu</li>
+          <li class="nav-item">
+             <a href="{{ url_for('driver_dashboard') }}">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('trip_requests') }}">
+              <span class="material-symbols-outlined"
+                >notifications_active</span
+              >
+              <span>Trip Requests</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_trips') }}" class="active">
+              <span class="material-symbols-outlined">alt_route</span>
+              <span>My Trips</span>
+            </a>
+          </li>
+          <li class="nav-title">Manage</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_vehicles') }}">
+              <span class="material-symbols-outlined">local_shipping</span>
+              <span>My Vehicles</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_earnings') }}">
+              <span class="material-symbols-outlined">payments</span>
+              <span>Earnings</span>
+            </a>
+          </li>
+          <li class="nav-title">Account</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_profile') }}">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span>My Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('support') }}">
+              <span class="material-symbols-outlined">help</span>
+              <span>Support</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/driver_logout" class="logout-btn">
+              <span class="material-symbols-outlined">logout</span><span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+  <header class="main-header">
+    <div class="header-left">
+      <span class="material-symbols-outlined hamburger" id="hamburgerBtn">menu</span>
+      <div class="page-title">
+        <h1>My Trips</h1>
+      </div>
+    </div>
+  </header>
+
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+  <div class="tabs-nav">
+    <button class="tab-btn active" data-tab="upcoming">Upcoming (Accepted)</button>
+    <button class="tab-btn" data-tab="ongoing">Ongoing</button>
+    <button class="tab-btn" data-tab="completed">Completed</button>
+  </div>
+
+  <div id="upcoming" class="tab-content active">
+    <div class="trips-list">
+  {% set upcoming_trips = trips | selectattr('status', 'equalto', 'Accepted') | list %}
+  {% if upcoming_trips %}
+    {% for trip in upcoming_trips %}
+      <div class="trip-card">
+        
+        <div class="t-route-section">
+            <div class="t-visual">
+                <div class="t-dot" style="background: #10b981;"></div>
+                <div class="t-line"></div>
+                <div class="t-dot" style="background: #ef4444;"></div>
+            </div>
+            <div class="t-info">
+                <p>Pickup</p>
+                <h4>{{ trip.pickup_location.split(',')[0] }}</h4>
+                <div style="height: 2px;"></div> <p>Drop-off</p>
+                <h4>{{ trip.drop_location.split(',')[0] }}</h4>
+            </div>
+        </div>
+
+        <div class="t-details-grid">
+            <div class="t-pnr-tag">ID: {{ trip.pnr_number }}</div>
+            
+            <div class="t-detail-item">
+                <label>Date</label>
+                <span>{{ trip.booking_date.strftime('%d %b %Y') }}</span>
+            </div>
+            <div class="t-detail-item">
+                <label>Load</label>
+                <span>{{ trip.load_weight }} kg</span>
+            </div>
+            <div class="t-detail-item">
+                <label>Est. Fare</label>
+                <span style="color: #059669;">{{ trip.fare }}</span>
+            </div>
+            
+            <div style="grid-column: span 2; margin-top: 5px;">
+                 <a href="tel:{{ trip.customer_phone }}" style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; color: #2563eb; text-decoration: none; font-weight: 600; background: #eff6ff; padding: 5px 10px; border-radius: 20px;">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">call</span> 
+                    Call Customer
+                </a>
+            </div>
+        </div>
+
+        <div class="t-action-stack">
+            <button class="btn-action btn-start" onclick="initiateTrip({{ trip.id }})">
+                <span class="material-symbols-outlined" style="font-size: 20px;">play_arrow</span>
+                Start Trip
+            </button>
+            
+            <a href="/driver/navigate-to-pickup/{{ trip.id }}" target="_blank" class="btn-action btn-nav">
+                <span class="material-symbols-outlined" style="font-size: 18px;">navigation</span>
+                Reach Pickup
+            </a>
+
+            <button onclick="openCancelModal({{ trip.id }})" class="btn-action btn-cancel-ghost">
+                <span class="material-symbols-outlined" style="font-size: 18px;">cancel</span>
+                Cancel Trip
+            </button>
+        </div>
+
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="no-trips" style="text-align:center; padding:40px; color:#6b7280;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color:#d1d5db;">assignment_add</span>
+        <p style="margin-top:10px;">No upcoming trips accepted yet.</p>
+    </div>
+  {% endif %}
+</div>
+  </div>
+
+  <div id="ongoing" class="tab-content">
+  <div class="trips-list">
+    {% set ongoing_trips = trips | selectattr('status', 'equalto', 'Ongoing') | list %}
+    {% if ongoing_trips %}
+      {% for trip in ongoing_trips %}
+        <div class="trip-card" style="border-left: 5px solid var(--pending-text);">
+          <div class="trip-card-main">
+            <div class="trip-icon" style="background: var(--pending-bg); color: var(--pending-text);">
+                <span class="material-symbols-outlined">navigation</span>
+            </div>
+            <div class="trip-route">
+              <strong>{{ trip.pickup_location.split(',')[0] }} 
+                <span class="material-symbols-outlined">arrow_right_alt</span> 
+                {{ trip.drop_location.split(',')[0] }}</strong>
+              <span>PNR: <strong>{{ trip.pnr_number }}</strong></span>
+            </div>
+          </div>
+          <div class="trip-details">
+    <span><strong>Customer:</strong> {{ trip.customer_name }}</span>
+    <span><strong>Fare:</strong> {{ trip.fare }}</span>
+    <div style="margin-top: 5px;">
+        <span class="status-badge status-ongoing">Ongoing</span>
+        <a href="tel:{{ trip.customer_phone }}" class="status-badge" style="background: #eff6ff; color: #1d4ed8; text-decoration: none; border: 1px solid #bfdbfe; margin-left: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">call</span> Contact Customer
+        </a>
+    </div>
+</div>
+          <div class="trip-actions">
+    <a href="/driver/live-trip/{{ trip.id }}" 
+       target="_blank" 
+       class="action-btn" 
+       style="background-color: var(--pending-text);">
+        Continue Navigation
+    </a>
+</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="no-trips"><p>No active trips in progress.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<div id="completed" class="tab-content">
+    <div class="trips-list">
+      {% set completed_trips = trips | selectattr('status', 'equalto', 'Completed') | list %}
+      {% if completed_trips %}
+        {% for trip in completed_trips %}
+         <div class="trip-card" style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+    <div class="trip-card-main" style="flex: 0 0 auto;">
+        <div class="trip-icon" style="background: var(--success-bg); color: var(--success-text);">
+            <span class="material-symbols-outlined">task_alt</span>
+        </div>
+        <div class="trip-route">
+            <strong>{{ trip.pickup_location.split(',')[0] }} 
+                <span class="material-symbols-outlined">arrow_right_alt</span> 
+                {{ trip.drop_location.split(',')[0] }}</strong>
+            <span>PNR: <strong style="color: var(--primary-color);">{{ trip.pnr_number }}</strong></span>
+        </div>
+    </div>
+
+    <div class="trip-details" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
+        {% set base_fare_raw = trip.fare.split('+')[0].split('(')[0] %}
+        {% set base_val = base_fare_raw.replace('₹', '').replace(',', '').strip() | float %}
+        {% set toll_val = trip.toll_tax | float if trip.toll_tax else 0.0 %}
+        {% set total_amt = trip.total_fare if trip.total_fare and trip.total_fare > 0 else (base_val + toll_val) %}
+
+        <div style="font-size: 1rem; color: var(--text-color);">
+            <strong>Total Settlement:</strong> 
+            <span style="letter-spacing: 0.5px;">
+                {{ "{:,.0f}".format(base_val) }} (trip cost) + 
+                {{ "{:,.0f}".format(toll_val) }} (toll tax) = 
+                <strong style="color: var(--success-text); font-size: 1.1rem;">{{ "{:,.0f}".format(total_amt) }}</strong>
+            </span>
+        </div>
+
+        <div style="display: flex; gap: 20px; font-size: 0.85rem; color: var(--text-light); align-items: center;">
+            <span><strong>Date:</strong> {{ trip.booking_date.strftime('%d %b %Y') }}</span>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <strong>Paid Via:</strong>
+                <span class="status-badge" style="background: #f1f5f9; color: var(--text-color); border: 1px solid var(--border-color); padding: 2px 10px;">
+                    {{ trip.payment_method }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="trip-actions" style="flex: 0 0 auto; margin-left: auto;">
+        <a href="/driver/view-receipt/{{ trip.id }}" target="_blank" class="action-btn">
+            View Receipt
+        </a>
+    </div>
+</div>
+        {% endfor %}
+      {% else %}
+        <div class="no-trips"><p>No completed trips yet.</p></div>
+      {% endif %}
+    </div>
+</div>
+</main>
+
+<div id="cancelConfirmModal" class="confirm-overlay">
+    <div class="confirm-box">
+        <div class="confirm-icon-box">
+            <span class="material-symbols-outlined">warning</span>
+        </div>
+        <h3 class="confirm-title">Cancel Trip?</h3>
+        <p class="confirm-text">Are you sure you want to cancel this trip? This will notify the customer immediately.</p>
+        <div class="confirm-actions">
+            <button class="c-btn c-btn-cancel" onclick="closeCancelModal()">No, Go Back</button>
+            <button class="c-btn c-btn-danger" id="confirmCancelBtn">Yes, Cancel Trip</button>
+        </div>
+    </div>
+</div>
+
+   <script>
+    let activeTripId = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Sidebar toggle for mobile
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const sidebar = document.getElementById("sidebar");
+        if (hamburgerBtn && sidebar) {
+            hamburgerBtn.addEventListener("click", () => {
+                sidebar.classList.toggle("open");
+            });
+        }
+
+        // Tab functionality
+        const tabContainer = document.querySelector(".tabs-nav");
+        const tabButtons = document.querySelectorAll(".tab-btn");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        if (tabContainer) {
+            tabContainer.addEventListener("click", (e) => {
+                const clicked = e.target.closest(".tab-btn");
+                if (!clicked) return;
+
+                tabButtons.forEach((btn) => btn.classList.remove("active"));
+                tabContents.forEach((content) => content.classList.remove("active"));
+
+                clicked.classList.add("active");
+                const tabId = clicked.dataset.tab;
+                document.getElementById(tabId).classList.add("active");
+            });
+        }
+    });
+
+    // 1. Open the Modal and Reset to Initial State
+    function initiateTrip(tripId) {
+        activeTripId = tripId;
+        const modal = document.getElementById('startTripModal');
+        
+        // Reset Modal UI
+        document.getElementById('otpContainer').style.display = 'none';
+        document.getElementById('modalTitle').innerText = "Trip Verification";
+        document.getElementById('modalDesc').innerText = "To ensure a secure pickup, please request an OTP. The customer will receive it via email.";
+        document.getElementById('tripOtpInput').value = '';
+        
+        // Set up the button for Step 1
+        const btn = document.getElementById('confirmStartBtn');
+        btn.innerText = "Get Start OTP";
+        btn.disabled = false;
+        btn.onclick = requestOtp; 
+        
+        modal.style.display = 'flex';
+    }
+
+    // 2. Step 1: Request OTP from Backend
+    function requestOtp() {
+        const btn = document.getElementById('confirmStartBtn');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 2s linear infinite; font-size: 18px; vertical-align: middle;">sync</span> Sending...`;
+
+        fetch(`/request_start_otp/${activeTripId}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Update UI for Step 2
+                document.getElementById('otpContainer').style.display = 'block';
+                document.getElementById('modalTitle').innerText = "Verify Pickup";
+                document.getElementById('modalDesc').innerText = "Ask the customer for the 4-digit code sent to their email.";
+                
+                btn.disabled = false;
+                btn.innerText = "Verify & Start";
+                btn.onclick = verifyOtp; // Switch button logic to verification
+            } else {
+                alert("Error: " + data.message);
+                btn.disabled = false;
+                btn.innerText = "Get Start OTP";
+            }
+        })
+        .catch(err => {
+            console.error("OTP Request Failed:", err);
+            btn.disabled = false;
+            btn.innerText = "Get Start OTP";
+        });
+    }
+
+    // 3. Step 2: Verify the Code and Start Trip
+    function verifyOtp() {
+        const otpValue = document.getElementById('tripOtpInput').value;
+        const btn = document.getElementById('confirmStartBtn');
+        
+        if (otpValue.length !== 4) {
+            alert("Please enter a valid 4-digit code.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Verifying...";
+
+        fetch('/verify_start_otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trip_id: activeTripId, otp: otpValue })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Verification successful: Launch navigation and reload
+                window.open(`/driver/live-trip/${activeTripId}`, '_blank');
+                window.location.reload();
+            } else {
+                alert("Invalid OTP: " + data.message);
+                btn.disabled = false;
+                btn.innerText = "Verify & Start";
+            }
+        })
+        .catch(err => {
+            console.error("Verification error:", err);
+            btn.disabled = false;
+            btn.innerText = "Verify & Start";
+        });
+    }
+
+    function closeStartModal() {
+        document.getElementById('startTripModal').style.display = 'none';
+        activeTripId = null;
+    }
+
+    // Close modal when clicking on the dark backdrop
+    window.onclick = function(event) {
+        const modal = document.getElementById('startTripModal');
+        if (event.target == modal) {
+            closeStartModal();
+        }
+    }
+
+    // Auto-dismiss alerts after 4 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.transition = "opacity 0.5s ease";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 4000);
+
+/* --- Cancel Modal Logic --- */
+function openCancelModal(tripId) {
+    const modal = document.getElementById('cancelConfirmModal');
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+    
+    // Set the redirect URL
+    confirmBtn.onclick = function() {
+        window.location.href = `/cancel_trip_driver/${tripId}`;
+    };
+    
+    modal.classList.add('active');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelConfirmModal').classList.remove('active');
+}
+
+// Close modal when clicking outside
+document.getElementById('cancelConfirmModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCancelModal();
+    }
+});
+</script>
+
+    <div id="startTripModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 20px;">
+    <div style="background: white; padding: 2.5rem; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; animation: modalFadeIn 0.3s ease-out;">
+        
+        <div id="modalIconContainer" style="width: 70px; height: 70px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #0284c7;">
+            <span class="material-symbols-outlined" style="font-size: 40px;">shield_lock</span>
+        </div>
+
+        <h2 id="modalTitle" style="font-size: 1.5rem; font-weight: 700; color: var(--dark-color); margin-bottom: 0.75rem;">Trip Verification</h2>
+        <p id="modalDesc" style="color: var(--text-light); margin-bottom: 1.5rem; line-height: 1.5;">
+            To ensure a secure pickup, please request an OTP. The customer will receive it via email.
+        </p>
+
+        <div id="otpContainer" style="display: none; margin-bottom: 2rem; animation: fadeIn 0.3s ease;">
+            <p style="font-size: 0.85rem; color: #ef4444; font-weight: 600; margin-bottom: 12px;">Enter 4-Digit OTP from Customer:</p>
+            <input type="text" id="tripOtpInput" maxlength="4" placeholder="0 0 0 0"
+                   style="width: 100%; padding: 15px; border: 2px solid #0284c7; border-radius: 12px; text-align: center; font-size: 1.8rem; font-weight: 800; letter-spacing: 12px; background: #f0f9ff; color: #0369a1;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <button onclick="closeStartModal()" style="padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: #f9fafb; font-weight: 600; color: var(--text-color); cursor: pointer;">
+                Cancel
+            </button>
+            <button id="confirmStartBtn" onclick="requestStartOtp()" style="padding: 12px; border-radius: 10px; border: none; background: #0284c7; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                Get Start OTP
+            </button>
+        </div>
+    </div>
+</div>
+  </body>
+</html>

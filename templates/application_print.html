@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Driver Application - QuickLoad</title>
+    <!-- Use a print-friendly style -->
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        color: #333;
+      }
+      .page-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 25px;
+        border: 1px solid #ddd;
+        position: relative;
+        min-height: 100vh; /* Ensures content fills height for visual consistency */
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+      }
+      .logo {
+        height: 60px;
+      }
+      .header-info {
+        text-align: right;
+      }
+      .header-info h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #333;
+      }
+      .header-info p {
+        margin: 5px 0 0;
+        font-size: 14px;
+        color: #666;
+      }
+      .application-id-row {
+        margin: 10px 0 0;
+        font-size: 14px;
+        color: #333;
+        font-weight: bold;
+      }
+      .application-id-row .value {
+        color: #5ca7a8;
+        font-size: 16px;
+        margin-left: 5px;
+      }
+      .section {
+        margin-bottom: 25px;
+      }
+      .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        background-color: #f2f2f2;
+        padding: 8px 12px;
+        margin-bottom: 15px;
+        border-left: 4px solid #5ca7a8;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 25px;
+      }
+      .grid-item,
+      .grid-item-full {
+        padding-bottom: 10px;
+        border-bottom: 1px dotted #ccc;
+      }
+      .grid-item-full {
+        grid-column: 1 / -1;
+      }
+      .label {
+        font-size: 13px;
+        color: #555;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .value {
+        font-size: 15px;
+        font-weight: bold;
+      }
+      .personal-info {
+        display: flex;
+        gap: 25px;
+      }
+      .personal-info .details {
+        flex-grow: 1;
+      }
+      .profile-photo {
+        width: 120px;
+        height: 120px;
+        border: 1px solid #ddd;
+        padding: 4px;
+        object-fit: cover;
+      }
+      .qr-code-box {
+        text-align: right;
+        padding-top: 15px;
+      
+      }
+      /* --- START: QR Code Size Increase --- */
+      .qr-code-box img {
+        width: 100px; /* Increased size */
+        height: 100px; /* Increased size */
+        border: 1px solid #ddd;
+      }
+      .qr-code-box p {
+        font-size: 12px; /* Increased text size for readability */
+        font-weight: 500;
+        color: #333; /* Darker color for print readability */
+        margin-top: 8px;
+      }
+      /* --- END: QR Code Size Increase --- */
+      
+      /* --- SYSTEM FOOTER --- */
+      .system-footer {
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        color: #999;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+        margin-top: 30px;
+      }
+      .system-footer span {
+          color: #5ca7a8;
+      }
+
+      /* Print Specific Styles */
+      @media print {
+        .page-container {
+          border: none;
+          box-shadow: none;
+          margin: 0;
+          max-width: 100%;
+          min-height: auto;
+        }
+        .system-footer {
+            /* Fix footer at the bottom of the page in print */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            padding: 10px 0;
+            background-color: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="header">
+        <!-- Assuming your logo is accessible via this path -->
+        <img
+          src="{{ url_for('static', filename='images/logo-bg.png') }}"
+          alt="QuickLoad Logo"
+          class="logo"
+        />
+        <div class="header-info">
+          <h1>Driver Partner Application</h1>
+          <p class="application-id-row">
+            Application ID: <span class="value" id="printApplicationId">N/A</span>
+          </p>
+          <p>Application Date: <span id="printDate"></span></p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Personal Information</div>
+        <div class="personal-info">
+          <div class="details">
+            <div class="grid">
+              <div class="grid-item">
+                <span class="label">Full Name</span>
+                <span class="value" id="printFullName"></span>
+              </div>
+              <div class="grid-item">
+                <span class="label">Date of Birth</span>
+                <span class="value" id="printDob"></span>
+              </div>
+              <div class="grid-item">
+                <span class="label">Contact Number</span>
+                <span class="value" id="printContact"></span>
+              </div>
+              <div class="grid-item">
+                <span class="label">Email Address</span>
+                <span class="value" id="printEmail"></span>
+              </div>
+              <div class="grid-item-full">
+                <span class="label">Address</span>
+                <span class="value" id="printAddress"></span>
+              </div>
+            </div>
+          </div>
+          <!-- Profile Photo -->
+          <img
+            id="printProfilePhoto"
+            class="profile-photo"
+            alt="Profile Photo"
+          />
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Vehicle & License Details</div>
+        <div class="grid">
+          <div class="grid-item">
+            <span class="label">License Number</span>
+            <span class="value" id="printLicenseNo"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">License Expiry</span>
+            <span class="value" id="printLicenseExpiry"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">Vehicle Type</span>
+            <span class="value" id="printVehicleType"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">Vehicle Model</span>
+            <span class="value" id="printVehicleModel"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">Vehicle Registration No.</span>
+            <span class="value" id="printVehicleRegNo"></span>
+          </div>
+          <!-- Insurance block is hidden if data.hasInsurance is not 'yes' -->
+          <div class="grid-item" id="printInsuranceBlock">
+            <span class="label">Insurance Policy No.</span>
+            <span class="value" id="printInsuranceNo"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Bank Details</div>
+        <div class="grid">
+          <div class="grid-item">
+            <span class="label">Account Holder Name</span>
+            <span class="value" id="printAccHolderName"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">Bank Name</span>
+            <span class="value" id="printBankName"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">Account Number</span>
+            <span class="value" id="printAccNumber"></span>
+          </div>
+          <div class="grid-item">
+            <span class="label">IFSC Code</span>
+            <span class="value" id="printIfsc"></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- QR Code Block -->
+      <div class="qr-code-box">
+        <!-- QR Code Image - Source will be set by JavaScript -->
+        <img id="qrCodeImage" alt="QR Code for Application ID" />
+        <p>Scan QR to verify application</p> <!-- Updated text -->
+      </div>
+      
+      <!-- System Generated Footer -->
+      <div class="system-footer">
+          <p>This document was system-generated by QuickLoad. | Developed by <span>Team UNIQUE</span></p>
+      </div>
+
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Retrieve application data from session storage
+        const data = JSON.parse(
+          sessionStorage.getItem("driverApplicationData")
+        );
+        
+        const profilePhoto = document.getElementById("printProfilePhoto");
+        const qrCodeImage = document.getElementById("qrCodeImage");
+        
+        // Flags to track image loading status
+        let photoLoaded = false;
+        let qrLoaded = false;
+        
+        // Function to initiate the print process
+        const initiatePrint = () => {
+          window.print();
+          window.onafterprint = () => {
+            sessionStorage.removeItem("driverApplicationData");
+          };
+        };
+
+        // Check if both images are loaded/failed and initiate print if so
+        const checkLoadAndPrint = () => {
+            if (photoLoaded && qrLoaded) {
+                initiatePrint();
+            }
+        }
+
+        if (data) {
+          // --- Data Binding ---
+          document.getElementById("printApplicationId").textContent = data.applicationId;
+          document.getElementById("printDate").textContent =
+            new Date().toLocaleDateString("en-GB");
+
+          // Set image sources using the URLs generated by Flask backend
+          qrCodeImage.src = data.qrCode;
+          profilePhoto.src = data.profilePhoto; 
+
+          // Populate text fields
+          document.getElementById("printFullName").textContent = data.fullName;
+          document.getElementById("printDob").textContent = data.dob;
+          document.getElementById("printContact").textContent = data.contactNumber;
+          document.getElementById("printEmail").textContent = data.email;
+          document.getElementById(
+            "printAddress"
+          ).textContent = `${data.address}, ${data.city}, ${data.pincode}`;
+          
+          document.getElementById("printLicenseNo").textContent = data.licenseNumber;
+          document.getElementById("printLicenseExpiry").textContent = data.licenseExpiry;
+          document.getElementById("printVehicleType").textContent = data.vehicleType;
+          document.getElementById("printVehicleModel").textContent = data.vehicleModel;
+          document.getElementById("printVehicleRegNo").textContent = data.vehicleRegNo;
+
+          // Handle Insurance Block visibility
+          const insuranceBlock = document.getElementById("printInsuranceBlock");
+          if (data.hasInsurance === "yes" && data.insuranceNumber) {
+            document.getElementById("printInsuranceNo").textContent = data.insuranceNumber;
+            insuranceBlock.style.display = 'grid-item'; 
+          } else {
+            insuranceBlock.style.display = "none";
+          }
+
+          document.getElementById("printAccHolderName").textContent = data.accHolderName;
+          document.getElementById("printBankName").textContent = data.bankName;
+          document.getElementById("printAccNumber").textContent = data.accNumber;
+          document.getElementById("printIfsc").textContent = data.ifsc;
+
+          // --- Set up load handlers for images ---
+          
+          // Photo Handler
+          profilePhoto.onload = () => { photoLoaded = true; checkLoadAndPrint(); };
+          profilePhoto.onerror = () => {
+            profilePhoto.alt = 'Photo Missing';
+            profilePhoto.style.objectFit = 'contain';
+            photoLoaded = true;
+            console.error("Profile photo failed to load. Proceeding with print.");
+            checkLoadAndPrint();
+          };
+          
+          // QR Code Handler
+          qrCodeImage.onload = () => { qrLoaded = true; checkLoadAndPrint(); };
+          qrCodeImage.onerror = () => {
+            qrCodeImage.alt = 'QR Error';
+            qrLoaded = true;
+            console.error("QR Code failed to load. Proceeding with print.");
+            checkLoadAndPrint();
+          };
+          
+          // Check if images were loaded from cache (synchronously)
+          if (profilePhoto.complete) { photoLoaded = true; }
+          if (qrCodeImage.complete) { qrLoaded = true; }
+          checkLoadAndPrint();
+
+        } else {
+             // Handle missing data scenario
+             console.error("Application data is missing from session storage.");
+        }
+      });
+    </script>
+  </body>
+</html>

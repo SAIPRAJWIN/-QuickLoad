@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tax Invoice - {{ trip.pnr_number }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #dc2626;
+            --secondary: #1e293b;
+            --success: #10b981;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; color: var(--text-main); line-height: 1.5; padding: 40px; }
+
+        .invoice-container { max-width: 900px; margin: auto; padding: 40px; border: 1px solid var(--border); border-radius: 8px; }
+
+        /* Header: Logo & Status */
+        .invoice-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .logo-section img { height: 60px; }
+        .status-badge { background: #dcfce7; color: #166534; padding: 6px 16px; border-radius: 50px; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+
+        /* Meta Info: Invoice details & QR */
+        .invoice-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .meta-box h1 { font-size: 32px; font-weight: 800; color: var(--secondary); margin-bottom: 10px; }
+        .meta-details p { font-size: 14px; margin-bottom: 4px; }
+        .meta-details strong { color: var(--text-muted); font-weight: 600; width: 100px; display: inline-block; }
+
+        .qr-section { display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+        .qr-code-img { width: 90px; height: 90px; border: 1px solid var(--border); padding: 4px; border-radius: 4px; }
+        .qr-text { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+        /* Participants: Driver & Customer */
+        .participants-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; padding: 25px; background: #f8fafc; border-radius: 12px; }
+        .participant-title { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; }
+        .participant-info h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .participant-info p { font-size: 13px; color: var(--text-muted); }
+
+        /* Route Table */
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .invoice-table th { text-align: left; padding: 12px; border-bottom: 2px solid var(--secondary); font-size: 12px; text-transform: uppercase; color: var(--text-muted); }
+        .invoice-table td { padding: 15px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+        /* Totals */
+        .financial-footer { display: flex; justify-content: space-between; align-items: flex-start; }
+        .payment-method-box { background: var(--secondary); color: white; padding: 15px 25px; border-radius: 8px; font-size: 14px; }
+        .payment-method-box span { display: block; font-size: 11px; opacity: 0.8; text-transform: uppercase; }
+
+        .total-summary { width: 300px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+        .summary-row.grand-total { border-top: 2px solid var(--secondary); margin-top: 10px; padding-top: 15px; font-weight: 800; font-size: 20px; color: var(--primary); }
+
+        .footer { text-align: center; margin-top: 50px; font-size: 11px; color: var(--text-muted); }
+
+        @media print {
+            .no-print { display: none; }
+            body { padding: 0; }
+            .invoice-container { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="text-align: center; margin-bottom: 30px;">
+        <button onclick="window.print()" style="padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: 700; cursor: pointer;">
+            Print / Download Invoice
+        </button>
+    </div>
+
+    <div class="invoice-container">
+        <header class="invoice-header">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/VaahanSetu-Copy.png') }}" alt="VaahanSetu">
+            </div>
+            <div class="status-badge">Payment Success</div>
+        </header>
+
+        <section class="invoice-meta">
+            <div class="meta-box">
+                <h1>TAX INVOICE</h1>
+                <div class="meta-details">
+                    <p><strong>Booking ID</strong> {{ trip.pnr_number }}</p>
+                    <p><strong>Date</strong> {{ trip.booking_date.strftime('%d %b %Y') }}</p>
+                    <p><strong>Vehicle</strong> {{ trip.vehicle_type_booked }}</p>
+                </div>
+            </div>
+            <div class="qr-section">
+                <span class="qr-text">Scan to Verify Trip</span>
+                <img src="{{ url_for('qr_code', app_id=trip.pnr_number) }}" class="qr-code-img" alt="QR">
+            </div>
+        </section>
+
+        <section class="participants-grid">
+            <div class="participant-info">
+                <h4 class="participant-title">Customer Details</h4>
+                <h3>{{ trip.customer_name }}</h3>
+                <p>{{ trip.customer_phone }}</p>
+                <p>{{ trip.customer_email }}</p>
+                <p>{{ trip.customer_gender }}, {{ trip.customer_age }} Yrs</p>
+            </div>
+            <div class="participant-info" style="border-left: 1px solid var(--border); padding-left: 40px;">
+                <h4 class="participant-title">Driver & Vehicle</h4>
+                <h3>{{ driver.full_name }}</h3>
+                <p>Registration: <strong>{{ driver.vehicle_reg_no }}</strong></p>
+                <p>Verification: Aadhaar/RC Verified</p>
+            </div>
+        </section>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Trip Logistics</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>Base Freight Charges</strong><br>
+                        <small style="color: var(--text-muted);">Load Weight: {{ trip.load_weight }} kg</small>
+                    </td>
+                    <td>
+                        {{ trip.pickup_location.split(',')[0] }} to {{ trip.drop_location.split(',')[0] }}
+                    </td>
+                    <td style="text-align: right;">₹ {{ "{:,.2f}".format(trip.base_numeric) }}</td>
+                </tr>
+                {% if trip.toll_numeric > 0 %}
+                <tr>
+                    <td><strong>Toll & Plaza Charges</strong></td>
+                    <td>Auto-recorded during transit</td>
+                    <td style="text-align: right;">₹ {{ "{:,.2f}".format(trip.toll_numeric) }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <footer class="financial-footer">
+            <div class="payment-method-box">
+                <span>Payment Mode</span>
+                <strong>{{ trip.payment_method }}</strong>
+            </div>
+            <div class="total-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹ {{ "{:,.2f}".format(trip.base_numeric) }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tolls</span>
+                    <span>₹ {{ "{:,.2f}".format(trip.toll_numeric) }}</span>
+                </div>
+                <div class="summary-row grand-total">
+                    <span>TOTAL</span>
+                    <span>₹ {{ "{:,.2f}".format(trip.grand_total) }}</span>
+                </div>
+            </div>
+        </footer>
+
+        <div class="footer">
+            <p>VaahanSetu - Smart Logistics Platform</p>
+            <p>This is a computer generated invoice and does not require a physical signature.</p>
+        </div>
+    </div>
+</body>
+</html>

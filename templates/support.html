@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Support - Driver Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <style>
+      :root {
+        --primary-color: #5ca7a8;
+        --dark-color: #1f2937;
+        --sidebar-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-color: #10b981;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      /* --- Sidebar Navigation (Same as Dashboard) --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        color: #d1d5db;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .sidebar-logo img {
+        height: 50px;
+      }
+      .sidebar-nav {
+        flex-grow: 1;
+        padding: 20px 10px;
+        overflow-y: auto;
+      }
+      .nav-list {
+        list-style: none;
+      }
+      .nav-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-light);
+        padding: 0 15px;
+        margin: 15px 0 10px 0;
+      }
+      .nav-item a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        color: #d1d5db;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 5px;
+      }
+      .nav-item a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+      .nav-item a.active {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      /* --- Main Content Area --- */
+      .main-content {
+        margin-left: 260px;
+        width: calc(100% - 260px);
+        padding: 25px;
+        transition: all 0.3s ease;
+      }
+
+      /* --- Main Header --- */
+      .main-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .hamburger {
+        display: none;
+        cursor: pointer;
+        font-size: 28px;
+      }
+      .page-title h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      /* --- Dashboard Card for Sections --- */
+      .dashboard-card {
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        margin-bottom: 25px;
+      }
+
+      /* --- Search Section --- */
+      .search-section {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .search-section h2 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+      }
+      .search-section p {
+        color: var(--text-light);
+        margin-bottom: 2rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .search-bar {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .search-input {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border-radius: 50px;
+        border: 1px solid var(--border-color);
+        font-size: 1rem;
+        font-family: inherit;
+      }
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(92, 167, 168, 0.2);
+      }
+      .search-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-light);
+      }
+
+      /* --- Content Grid Layout --- */
+      .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+
+      /* --- FAQ Accordion --- */
+      .faq-item {
+        border-bottom: 1px solid var(--border-color);
+      }
+      .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 1.1rem;
+      }
+      .faq-question .toggle-icon {
+        transition: transform 0.3s ease;
+      }
+      .faq-item.active .faq-question .toggle-icon {
+        transform: rotate(45deg);
+      }
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.4s ease;
+        color: var(--text-light);
+        line-height: 1.7;
+      }
+      .faq-item.active .faq-answer {
+        max-height: 200px; /* Adjust as needed for content */
+        padding-bottom: 20px;
+      }
+
+      /* --- Contact & Ticket Section --- */
+      .contact-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background-color: var(--main-bg);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color);
+      }
+      .contact-icon {
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e0e7ff;
+        color: #4338ca;
+      }
+      .contact-info strong {
+        display: block;
+      }
+      .contact-info span {
+        font-size: 0.9rem;
+        color: var(--text-light);
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        font-family: inherit;
+        font-size: 1rem;
+      }
+      .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+      .submit-btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .submit-btn:hover {
+        background-color: #4a8e8f;
+      }
+
+      /* --- Responsive Design --- */
+      @media (max-width: 1200px) {
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+          z-index: 1001;
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+        }
+        .hamburger {
+          display: block;
+        }
+      }
+
+          /* Red Logout Button Styles */
+      .nav-item a.logout-btn {
+        background-color: transparent; /* Transparent by default */
+        color: #dc2626 !important; /* Red Text */ 
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+      
+      /* Hover State: Light Red Background */
+      .nav-item a.logout-btn:hover {
+        background-color: #fef2f2; /* Very Light Red */
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="sidebar-logo">
+          <img
+            src="{{ url_for('static', filename='images/logo-bg.png') }}"
+            alt="QuickLoad Logo"
+          />
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-title">Menu</li>
+          <li class="nav-item">
+            <a href="{{ url_for('driver_dashboard') }}">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('trip_requests') }}">
+              <span class="material-symbols-outlined"
+                >notifications_active</span
+              >
+              <span>Trip Requests</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_trips') }}">
+              <span class="material-symbols-outlined">alt_route</span>
+              <span>My Trips</span>
+            </a>
+          </li>
+          <li class="nav-title">Manage</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_vehicles') }}">
+              <span class="material-symbols-outlined">local_shipping</span>
+              <span>My Vehicles</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_earnings') }}">
+              <span class="material-symbols-outlined">payments</span>
+              <span>Earnings</span>
+            </a>
+          </li>
+          <li class="nav-title">Account</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_profile') }}">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span>My Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('support') }}" class="active">
+              <span class="material-symbols-outlined">help</span>
+              <span>Support</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/driver_logout" class="logout-btn">
+              <span class="material-symbols-outlined">logout</span><span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <header class="main-header">
+        <div class="header-left">
+          <span class="material-symbols-outlined hamburger" id="hamburgerBtn"
+            >menu</span
+          >
+          <div class="page-title">
+            <h1>Help & Support</h1>
+          </div>
+        </div>
+      </header>
+
+      <div class="dashboard-card search-section">
+        <h2>How can we help you?</h2>
+        <p>
+          Find answers to your questions, connect with our support team, and get
+          the help you need to keep moving.
+        </p>
+        <div class="search-bar">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search for topics, questions..."
+          />
+          <span class="material-symbols-outlined search-icon">search</span>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="dashboard-card">
+          <h3 class="section-title">Frequently Asked Questions</h3>
+          <div class="faq-accordion">
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How do I get paid for my trips?</span>
+                <span class="material-symbols-outlined toggle-icon">add</span>
+              </div>
+              <div class="faq-answer">
+                <p>
+                  Payments for all completed trips are processed weekly. The
+                  total amount, after deducting our standard commission, is
+                  transferred directly to the bank account you've registered
+                  with us. You can view all your payouts in the "My Earnings"
+                  section.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>What happens if a customer cancels a trip?</span>
+                <span class="material-symbols-outlined toggle-icon">add</span>
+              </div>
+              <div class="faq-answer">
+                <p>
+                  Our cancellation policy protects our driver partners. If a
+                  customer cancels after you have already started moving towards
+                  the pickup location, a standard cancellation fee will be
+                  credited to your account to compensate for your time and fuel.
+                </p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <div class="faq-question">
+                <span>How can I add another vehicle to my profile?</span>
+                <span class="material-symbols-outlined toggle-icon">add</span>
+              </div>
+              <div class="faq-answer">
+                <p>
+                  You can add a new vehicle from the "My Vehicles" page. Click
+                  the "Add New Vehicle" button and follow the on-screen
+                  instructions to submit the required documents and details. The
+                  new vehicle will need to go through our standard verification
+                  process.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="dashboard-card">
+            <h3 class="section-title">Contact Support</h3>
+            <div class="contact-card">
+              <div class="contact-icon">
+                <span class="material-symbols-outlined">call</span>
+              </div>
+              <div class="contact-info">
+                <strong>Call Us (24/7)</strong>
+                <span>+91 1800-123-4567</span>
+              </div>
+            </div>
+            <div class="contact-card">
+              <div class="contact-icon">
+                <span class="material-symbols-outlined">chat</span>
+              </div>
+              <div class="contact-info">
+                <strong>Live Chat</strong>
+                <span>Connect with an agent now</span>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <h3 class="section-title">Submit a Ticket</h3>
+            <form id="ticketForm">
+              <div class="form-group">
+                <label for="topic" class="form-label">Topic</label>
+                <select id="topic" class="form-select">
+                  <option>Payment Issue</option>
+                  <option>Technical Problem</option>
+                  <option>Customer Feedback</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="description" class="form-label">Description</label>
+                <textarea
+                  id="description"
+                  class="form-textarea"
+                  placeholder="Please describe your issue in detail..."
+                ></textarea>
+              </div>
+              <button type="submit" class="submit-btn">Submit Ticket</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Sidebar toggle for mobile
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const sidebar = document.getElementById("sidebar");
+        if (hamburgerBtn && sidebar) {
+          hamburgerBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+          });
+        }
+
+        // FAQ Accordion functionality
+        const faqItems = document.querySelectorAll(".faq-item");
+        faqItems.forEach((item) => {
+          const question = item.querySelector(".faq-question");
+          question.addEventListener("click", () => {
+            // Close other open items
+            const currentlyActive = document.querySelector(".faq-item.active");
+            if (currentlyActive && currentlyActive !== item) {
+              currentlyActive.classList.remove("active");
+            }
+            // Toggle the clicked item
+            item.classList.toggle("active");
+          });
+        });
+
+        // Ticket form submission placeholder
+        const ticketForm = document.getElementById("ticketForm");
+        if (ticketForm) {
+          ticketForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            alert(
+              "Support ticket submitted successfully! Our team will get back to you shortly."
+            );
+            ticketForm.reset();
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

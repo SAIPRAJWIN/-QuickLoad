@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickLoad - Real-time Goods Vehicle Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <style>
+      /* --- GLOBAL RESET & BASE STYLES --- */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        overflow-x: hidden;
+        background-color: #f8fafc;
+        color: #1f2937; /* Default dark text color */
+      }
+      
+      a {
+          text-decoration: none;
+      }
+
+      /* Utility classes for consistency */
+      .section-padding {
+        padding: 6rem 2rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+      }
+      .eyebrow-title {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #dc2626; /* Red primary color */
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.75rem;
+      }
+      .main-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 0.5rem;
+      }
+      .main-title::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 5px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
+      .section-subtitle {
+        font-size: 1.25rem;
+        color: #4b5563;
+        max-width: 650px;
+        margin: 0 auto;
+      }
+      
+      /* --- Header Styles --- */
+      .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: transparent;
+        padding: 1rem 2rem;
+        z-index: 1000;
+        transition: all 0.4s ease;
+      }
+
+      .header.scrolled {
+        background: rgba(29, 35, 42, 0.9); /* Modern dark slate background with less transparency */
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .logo img {
+        height: 60px;
+        width: auto;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+        gap: 2.5rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.95rem;
+        position: relative;
+        transition: all 0.3s ease;
+        padding: 0.25rem 0; 
+      }
+
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        bottom: 0px; 
+        left: 0;
+        width: 0;
+        height: 3px; 
+        background: linear-gradient(
+          135deg,
+          #ef4444,
+          #dc2626
+        );
+        transition: width 0.3s ease;
+      }
+      .nav-links a:hover::after {
+        width: 100%;
+      }
+
+      .dropdown {
+        position: relative;
+      }
+
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: rgba(255, 255, 255, 0.98); 
+        backdrop-filter: blur(20px);
+        min-width: 180px;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); 
+        border: 1px solid rgba(226, 232, 240, 0.5); 
+        z-index: 1001;
+        margin-top: 0.75rem; 
+        overflow: hidden;
+        transform-origin: top;
+      }
+
+      .dropdown-content a {
+        display: block;
+        padding: 1rem 1.25rem;
+        color: #1f2937;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .dropdown-content a:hover {
+        background: #f4f5ff; 
+      }
+
+      .dropdown.active .dropdown-content {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+      }
+
+      .user-profile:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .profile-pic {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .username {
+        font-weight: 500;
+        color: #fff;
+        font-size: 0.95rem;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+        padding: 0.5rem;
+      }
+
+      .hamburger span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background: #fff;
+        margin: 3px 0;
+        transition: all 0.4s ease;
+        border-radius: 3px;
+      }
+
+      /* Center-aligned Tracking Button */
+#trackingForm button {
+    min-width: 150px;
+    height: 50px; /* Explicit height to match input */
+    padding: 0 20px; 
+    font-weight: 700; 
+    font-size: 1rem; 
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    
+    /* Flexbox centering logic */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    /* --- MODERN REALISTIC HERO SECTION --- */
+.hero {
+  min-height: 100vh;
+  /* Cinematic Background: Darker gradient at bottom/left for text readability */
+  background: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 50%, rgba(15, 23, 42, 0.4) 100%),
+    url("{{ url_for('static', filename='images/login-bg.png') }}");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding-top: 80px; /* Offset for fixed header */
+}
+
+.hero-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr; /* Split layout: Text on left, Visual on right */
+  gap: 4rem;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* -- Hero Text Side -- */
+.hero-content {
+  text-align: left; /* Modern left-align */
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  backdrop-filter: blur(5px);
+}
+
+.hero-badge::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.hero-quote {
+  font-size: 4rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+/* Gradient Text Effect */
+.highlight-text {
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-subquote {
+  font-size: 1.25rem;
+  color: #cbd5e1; /* Blue-ish grey for better readability */
+  margin-bottom: 2.5rem;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 90%;
+}
+
+.hero-cta-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start; /* Align left */
+}
+
+/* -- Hero Visual Side (The 3D Glass Card) -- */
+.hero-visual {
+  position: relative;
+  perspective: 1000px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: rotateY(-5deg) rotateX(2deg);
+  transition: transform 0.3s ease;
+  animation: floatCard 6s ease-in-out infinite;
+}
+
+.glass-card:hover {
+  transform: rotateY(0deg) rotateX(0deg);
+}
+
+/* Simulated UI Elements inside the card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+}
+
+.status-pill {
+  background: #10b981;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.card-map-placeholder {
+  height: 180px;
+  background: url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg'); /* Or a map image */
+  background-size: cover;
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Animated Route Line */
+.route-line {
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  width: 0%;
+  height: 2px;
+  background: #ef4444;
+  animation: drawRoute 3s ease-out forwards 1s;
+}
+.driver-dot {
+  position: absolute;
+  top: 48%;
+  left: 20%;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 3px solid #ef4444;
+  border-radius: 50%;
+  animation: moveDriver 3s ease-out forwards 1s;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.driver-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: white;
+}
+
+.driver-avatar {
+  width: 48px;
+  height: 48px;
+  background: #374151;
+  border-radius: 50%;
+  border: 2px solid #ef4444;
+}
+
+.driver-text h4 {
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+.driver-text p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0) rotateY(-5deg); }
+  50% { transform: translateY(-15px) rotateY(-5deg); }
+}
+
+@keyframes drawRoute {
+  to { width: 60%; }
+}
+@keyframes moveDriver {
+  to { left: 80%; }
+}
+
+/* Mobile Responsiveness for Hero */
+@media (max-width: 992px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 3rem;
+  }
+  
+  .hero-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hero-cta-group {
+    justify-content: center;
+  }
+  
+  .hero-visual {
+    display: none; /* Hide complex visual on very small screens or simplify it */
+  }
+  
+  .hero-quote {
+    font-size: 3rem;
+  }
+}
+@media (min-width: 993px) {
+    .hero-visual {
+        display: block;
+    }
+}
+
+      /* --- Form Section --- */
+      .form-section {
+        padding: 6rem 2rem;
+        position: relative;
+        background: url("{{ url_for('static', filename='images/register-bg.png') }}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .booking-wrapper {
+        display: flex;
+        width: 100%;
+        max-width: 1100px;
+        background: #f4f1ea;
+        border: 1px solid #e0ddd7;
+        border-radius: 24px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15); 
+        overflow: hidden;
+      }
+      .booking-image-container {
+        flex: 0 0 40%;
+        background-color: #6d4c41; /* Dark brown background to match button */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem; 
+      }
+
+      .booking-image-container img {
+        max-width: 100%;
+        height: auto;
+        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
+      }
+
+      .booking-form-container {
+        position: relative;
+        z-index: 2;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 3rem;
+        margin: 0;
+        box-shadow: none;
+        flex: 0 0 60%;
+      }
+
+      .form-title {
+        text-align: center;
+        color: #1f2937;
+        font-size: 2.5rem; 
+        font-weight: 800;
+        margin-bottom: 2rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.75rem; 
+        margin-bottom: 1.75rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .form-label {
+        color: #374151;
+        font-size: 0.75rem;
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.08em; 
+        margin-bottom: 0.75rem;
+      }
+
+      .form-input,
+      .form-select {
+        padding: 1rem 1.5rem; 
+        border: 1px solid rgba(107, 114, 128, 0.4); 
+        border-radius: 50px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .form-input::placeholder {
+        color: #9ca3af;
+      }
+
+      .form-select option {
+        background-color: #ffffff;
+        color: #1f2937;
+      }
+
+      .form-input:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: #dc2626;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2); 
+      }
+      .location-group {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .location-input {
+        flex: 1;
+      }
+
+      .location-btn {
+        padding: 1rem 1.5rem;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 50px;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        font-weight: 600; 
+        white-space: nowrap;
+      }
+
+      .location-btn:hover {
+        background: #f1f5f9;
+        border-color: #d1d5db;
+      }
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 2rem 0; 
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: #dc2626; 
+      }
+
+      .checkbox-label {
+        color: #374151;
+        font-size: 0.95rem; 
+        font-weight: 500;
+      }
+
+      .search-btn {
+        padding: 1.1rem 4rem;
+        background: linear-gradient(
+          135deg,
+          #8d6e63,
+          #6d4c41
+        );
+        border: none;
+        border-radius: 50px;
+        color: white;
+        font-size: 1.1rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: 0 12px 35px rgba(109, 76, 65, 0.45); 
+      }
+      .search-btn:hover {
+        transform: translateY(-4px); 
+        box-shadow: 0 20px 50px rgba(109, 76, 65, 0.55);
+      }
+      
+      .location-info {
+        font-size: 0.9rem;
+        color: #374151;
+        background-color: #fff1f2; 
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-top: 12px;
+        display: none;
+      }
+      
+      /* --- Features Section --- */
+      .features {
+        padding: 6rem 2rem;
+        background-color: #ffffff;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .features::before,
+      .features::after {
+        content: "";
+        position: absolute;
+        z-index: 1;
+        border-radius: 50%;
+        filter: blur(150px);
+      }
+
+      .features::before {
+        width: 450px;
+        height: 450px;
+        background: rgba(102, 126, 234, 0.4);
+        top: -200px;
+        left: -200px;
+      }
+
+      .features::after {
+        width: 550px;
+        height: 550px;
+        background: rgba(118, 75, 162, 0.3);
+        bottom: -250px;
+        right: -250px;
+      }
+      .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2.5rem;
+        margin-top: 4rem;
+      }
+
+      .feature-card {
+        background: #ffffff;
+        border: 2px solid transparent;
+        padding: 3rem; 
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-10px); 
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15); 
+        border-color: #dc2626; 
+      }
+
+      .feature-icon {
+        width: 80px; 
+        height: 80px;
+        background: #fee2e2;
+        border-radius: 50%; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        transition: all 0.4s ease;
+      }
+
+      .feature-icon img {
+        width: 50px; 
+        height: 50px;
+        object-fit: contain;
+      }
+      .feature-card:hover .feature-icon {
+        background: #dc2626;
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.1);
+      }
+
+      .feature-title {
+        font-size: 1.6rem; 
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+      }
+
+      .feature-desc {
+        color: #4b5563; 
+        line-height: 1.8;
+      }
+
+      /* --- How It Works Section --- */
+      .how-it-works {
+        padding: 6rem 2rem;
+        background-color: #f8fafc;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .steps-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-top: 5rem;
+        position: relative;
+        padding: 0 2rem; 
+      }
+
+      .step {
+        text-align: left;
+        flex-basis: 25%;
+        position: relative;
+        padding: 2rem; 
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+      }
+
+      .step:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 30px; 
+        right: -1rem; 
+        width: 3rem;
+        height: 2px;
+        background-image: linear-gradient(
+          to right,
+          #dc2626 50%, 
+          transparent 50%
+        );
+        background-size: 8px 2px;
+        background-repeat: repeat-x;
+        z-index: 10;
+      }
+
+      .step-number {
+        width: 60px;
+        height: 60px;
+        background: #dc2626; 
+        color: #fff;
+        border: 4px solid #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem; 
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+      }
+
+      .step-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+      }
+
+      .step-desc {
+        color: #4b5563;
+        line-height: 1.8;
+      }
+      
+      /* --- NEW: Testimonials Section --- */
+      .testimonials {
+        padding: 6rem 2rem;
+        background-color: #fef3f2; /* Very light red/pink background */
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+      }
+
+      .testimonials .main-title::after {
+        background: linear-gradient(135deg, #667eea, #764ba2); /* Blue underline for visual break */
+      }
+
+      .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+      }
+
+      .testimonial-card {
+        background: #ffffff;
+        padding: 2.5rem;
+        border-radius: 20px;
+        text-align: left;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border-bottom: 5px solid #dc2626; /* Red accent */
+      }
+
+      .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+      }
+
+      .quote-icon {
+        font-size: 3.5rem;
+        color: #dc2626;
+        font-family: Georgia, serif;
+        line-height: 1;
+        margin-bottom: 1rem;
+      }
+
+      .quote-text {
+        font-size: 1rem;
+        color: #374151;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        margin-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 1.5rem;
+      }
+
+      .user-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        text-align: left;
+      }
+
+      .user-name {
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .user-title {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin: 0;
+      }
+
+      /* --- NEW: Final CTA Section --- */
+      .final-cta-section {
+        background: linear-gradient(135deg, #1f2937, #374151);
+        padding: 4rem 2rem;
+        text-align: center;
+      }
+
+      .final-cta-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .cta-content {
+        text-align: left;
+        max-width: 60%;
+      }
+
+      .cta-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 0.5rem;
+      }
+
+      .cta-subtitle {
+        font-size: 1.1rem;
+        color: #d1d5db;
+      }
+
+      .cta-buttons {
+        flex-shrink: 0;
+        margin-left: 2rem;
+        display: flex;
+        gap: 1.5rem;
+      }
+      
+      .cta-buttons .hero-cta {
+          padding: 1rem 2rem;
+          font-size: 1rem;
+      }
+
+      /* --- Footer --- */
+      .footer {
+        background: linear-gradient(135deg, #1f2937, #374151);
+        color: white;
+        padding: 4rem 2rem 2rem;
+      }
+
+      .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 3rem;
+      }
+
+      .footer-section h3 {
+        font-size: 1.4rem; 
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #fff;
+      }
+
+      .footer-section p,
+      .footer-section a {
+        color: #d1d5db;
+        text-decoration: none;
+        line-height: 1.8;
+        transition: color 0.3s ease;
+      }
+
+      .footer-section a:hover {
+        color: #dc2626; /* Red hover color */
+      }
+
+      .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.15); 
+        margin-top: 3rem;
+        padding-top: 2rem;
+        text-align: center;
+        color: #9ca3af;
+      }
+      
+      /* --- Modal Styles --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal-content-wide {
+        background: #ffffff;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 900px; 
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .modal-title {
+        font-size: 1.5rem; 
+        font-weight: 700;
+        color: #1f2937;
+      }
+
+      .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 2.5rem; 
+        font-weight: 300;
+        cursor: pointer;
+        color: #6b7280;
+        line-height: 1;
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex-grow: 1;
+      }
+
+      .map-search-container {
+        margin-bottom: 1rem;
+      }
+
+      .map-container-modal {
+        width: 100%;
+        height: 500px; 
+        border-radius: 12px;
+        background-color: #f1f5f9;
+      }
+      #modalLocationInfo {
+        margin-top: 1rem;
+        display: none;
+      }
+
+      .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        text-align: right;
+      }
+      
+      .pac-container {
+        z-index: 9999;
+      }
+      .custom-select-wrapper {
+        position: relative;
+      }
+      .custom-select-wrapper::after {
+        content: "▼";
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        font-size: 0.8rem;
+        color: #6b7280;
+        pointer-events: none;
+      }
+      #vehicleTypeInput {
+        cursor: pointer;
+      }
+
+      #vehicleOptionsContainer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem; 
+        padding: 1rem 0;
+      }
+
+      .vehicle-option {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px; 
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .vehicle-option:hover, .vehicle-option.selected {
+        border-color: #dc2626; 
+        background-color: #fef2f2; 
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .vehicle-icon {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+      }
+
+      .vehicle-details {
+        text-align: left;
+      }
+
+      .vehicle-name {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+
+      .vehicle-capacity {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin: 0;
+      }
+      
+      /* --- Mobile Responsive --- */
+      @media (max-width: 992px) {
+        .booking-wrapper {
+          flex-direction: column;
+        }
+        .booking-image-container {
+          display: none;
+        }
+        .final-cta-container {
+            flex-direction: column;
+        }
+        .cta-content {
+            max-width: 100%;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .cta-buttons {
+            margin-left: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .hamburger {
+          display: flex;
+        }
+
+        .nav-links {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(20px);
+          flex-direction: column;
+          padding: 1rem 0;
+          border-radius: 0 0 20px 20px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-links.active {
+          display: flex;
+        }
+        .nav-links li a {
+            color: #1f2937;
+        }
+        .nav-links li a::after {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .hero-quote {
+          font-size: 2.5rem;
+        }
+
+        .hero-subquote {
+          font-size: 1.1rem;
+        }
+        
+        .hero-cta-group {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hero-cta {
+            width: 90%;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+
+        .form-section {
+          padding: 4rem 1rem;
+        }
+
+        .booking-form-container {
+          padding: 2rem;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .form-title, .main-title {
+          font-size: 2.2rem;
+        }
+
+        .location-group {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .steps-container {
+          flex-direction: column;
+          gap: 2rem;
+          padding: 0;
+        }
+        .step:not(:last-child)::after {
+            display: none;
+        }
+        .testimonials-grid {
+            grid-template-columns: 1fr;
+        }
+        .cta-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+        .cta-buttons .hero-cta {
+            width: 100%;
+        }
+      }
+
+      .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1001;
+            display: none; /* Hidden by default */
+        }
+        
+        .result-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        
+        .result-item:hover {
+            background-color: #fef2f2; /* Light red hover */
+            color: #dc2626;
+        }
+
+
+        /* Fix for Map Modal Z-Index */
+        .leaflet-container {
+            z-index: 1;
+        }
+        
+        /* Container for input to position dropdown correctly */
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        /* Orange Pulse for Searching Status */
+/* --- ROBUST CAROUSEL CSS --- */
+.hero-carousel-3d {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 350px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+  transform: rotateY(-5deg) rotateX(2deg);
+  background: #0f172a; /* Dark background if image fails */
+}
+
+/* --- UPDATED CAROUSEL CSS FOR 5 SLIDES --- */
+.carousel-track {
+  display: flex;
+  width: 500%;         /* Changed from 300% to 500% for 5 slides */
+  height: 100%;
+  will-change: transform;
+  /* Increased duration to 20s for smoother timing across 5 slides */
+  animation: slideInfinite 20s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.carousel-slide {
+  width: 20%;          /* Changed from 33.33% to 20% (100% / 5 slides) */
+  height: 100%;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Updated Keyframes for 5 distinct stops */
+@keyframes slideInfinite {
+  0%, 15% { transform: translateX(0%); }
+  20%, 35% { transform: translateX(-20%); }
+  40%, 55% { transform: translateX(-40%); }
+  60%, 75% { transform: translateX(-60%); }
+  80%, 95% { transform: translateX(-80%); }
+  100% { transform: translateX(0%); }
+}
+/* --- MISSING BADGE STYLES (Fixes the gap) --- */
+.live-badge {
+  position: absolute;  /* This makes it float so it doesn't push the image down */
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  font-size: 0.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #10b981;
+  animation: blink 2s infinite;
+}
+
+/* Make sure the text overlay sits at the bottom */
+.carousel-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.95), transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem;
+  pointer-events: none; /* Lets clicks pass through if needed */
+}
+
+.carousel-overlay h3 { color: white; margin: 0; font-size: 1.5rem; font-weight: 700; }
+.carousel-overlay p { color: #cbd5e1; font-size: 0.9rem; margin-top: 5px; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* --- MODERN HERO BUTTONS --- */
+.hero-cta-group {
+  display: flex;
+  gap: 1.5rem; /* Space between buttons */
+  margin-top: 2rem;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 36px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff !important; /* Forces white text */
+  text-decoration: none;
+  border-radius: 50px; /* Modern pill shape */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  z-index: 5;
+  cursor: pointer;
+}
+
+/* 1. PRIMARY BUTTON (Book Now) - Glowing Red Gradient */
+.hero-cta:not(.secondary) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 10px 30px -5px rgba(220, 38, 38, 0.5); /* Red Glow */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-cta:not(.secondary):hover {
+  transform: translateY(-3px); /* Lift effect */
+  box-shadow: 0 20px 40px -5px rgba(220, 38, 38, 0.7);
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+/* 2. SECONDARY BUTTON (Track Order) - Glass Effect */
+.hero-cta.secondary {
+  background: rgba(255, 255, 255, 0.05); /* Transparent Glass */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Thin white border */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.hero-cta.secondary:hover {
+  background: rgba(255, 255, 255, 0.15); /* Slightly brighter on hover */
+  border-color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px -5px rgba(255, 255, 255, 0.15);
+}
+
+/* Shine Effect Animation on Hover */
+.hero-cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.hero-cta:hover::after {
+  left: 100%;
+}
+
+/* --- MODERN REALISTIC FEATURES SECTION --- */
+.features-realistic {
+  position: relative;
+  padding: 8rem 2rem;
+  /* Realistic Background: Highway/Logistics Image */
+  background: url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* Parallax Effect */
+  overflow: hidden;
+}
+
+/* Dark Overlay for readability */
+.features-realistic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.95));
+  z-index: 1;
+}
+
+.features-container-modern {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header Styling */
+.modern-header {
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.modern-header .eyebrow {
+  color: #ef4444;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  display: block;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.modern-header h2 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+}
+
+.modern-header p {
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  max-width: 700px;
+  margin: 0 auto;
+  font-weight: 300;
+}
+
+/* Grid Layout */
+.features-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2rem;
+}
+
+/* Glass Cards */
+.feature-card-glass {
+  background: rgba(255, 255, 255, 0.03); /* Very subtle transparency */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3rem 2rem;
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card-glass:hover {
+  transform: translateY(-10px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(239, 68, 68, 0.4); /* Red glow border */
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Icon Box */
+.f-icon-box {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  transition: 0.4s;
+  position: relative;
+  z-index: 2;
+}
+
+.f-icon-box img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+}
+
+/* --- ICON HOVER: RED TO WHITE --- */
+
+/* 1. Turn the Box White on Hover */
+.feature-card-glass:hover .f-icon-box {
+  background: #ffffff;  /* White Background */
+  border-color: #ffffff; /* White Border */
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6); /* White Glow */
+}
+
+/* 2. Turn the Image Black on Hover (So it's visible on white) */
+.feature-card-glass:hover .f-icon-box img {
+  filter: brightness(0); /* Forces the icon to be Black */
+  transition: filter 0.3s ease;
+}
+
+/* Text Styling */
+.f-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.f-desc {
+  color: #94a3b8;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+/* Background Number for Depth */
+.bg-number {
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 8rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.02);
+  z-index: 0;
+  transition: 0.4s;
+}
+.feature-card-glass:hover .bg-number {
+  color: rgba(239, 68, 68, 0.05);
+  transform: translateY(10px);
+}
+
+@media (max-width: 768px) {
+  .modern-header h2 { font-size: 2.5rem; }
+  .features-grid-modern { grid-template-columns: 1fr; }
+}
+
+    </style>
+  </head>
+  <body>
+    <header class="header" id="header">
+      <nav class="navbar">
+        <a href="#" class="logo"
+          ><img
+            src="{{ url_for('static', filename='images/logo-bg.png') }}" 
+            alt="QuickLoad Logo"
+        /></a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#form-section">Booking</a></li>
+          <li><a href="#track-section">Track Shipment</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#testimonials">Testimonials</a></li>
+          <li><a href="#footer">Contact Us</a></li>
+        </ul>
+        <div class="user-profile dropdown" id="userDropdown">
+  <div class="profile-pic">{{ name[0] }}</div> <span class="username">{{ name }}</span> <div class="dropdown-content">
+    <a href="customer-profile">View Profile</a>
+    <a href="my-bookings">My Bookings</a>
+    <a href="help-support">Help/Support</a>
+    <a href="{{ url_for('logout') }}" style="color: #dc2626">Logout</a> </div>
+</div>
+        <div class="hamburger" id="hamburger">
+          <span></span><span></span><span></span>
+        </div>
+      </nav>
+    </header>
+
+    <section class="hero" id="home">
+  <div class="hero-container">
+    
+    <div class="hero-content">
+      <div class="hero-badge">
+        Live Network Active
+      </div>
+      <h1 class="hero-quote">
+        Move Goods Faster <br>
+        <span class="highlight-text">With Confidence.</span>
+      </h1>
+      <p class="hero-subquote">
+        Join India's most advanced logistics network. Book trucks instantly, track shipments in real-time, and experience transparent pricing.
+      </p>
+      <div class="hero-cta-group">
+        <a href="#form-section" class="hero-cta">Book Now</a>
+        <a href="#track-section" class="hero-cta secondary">Track Order</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+  
+  {% if hero_trip %}
+    <div class="glass-card">
+      <div class="card-header">
+        <div style="color: white; font-weight: 600; font-family: monospace; letter-spacing: 1px;">
+          #{{ hero_trip.pnr_number }}
+        </div>
+        
+        {% if hero_trip.driver_name %}
+           {% if hero_trip.status == 'Ongoing' %}
+             <div class="status-pill" style="background: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">● On Route</div>
+           {% else %}
+             <div class="status-pill" style="background: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);">● Accepted</div>
+           {% endif %}
+        {% else %}
+           <div class="status-pill" style="background: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); animation: pulse-orange 2s infinite;">● Searching</div>
+        {% endif %}
+      </div>
+      
+      <div class="card-map-placeholder">
+        <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
+        
+        {% if hero_trip.driver_name %}
+            <div class="route-line"></div>
+            <div class="driver-dot"></div>
+        {% else %}
+            <div class="radar-scan"></div>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.8); font-size:0.8rem; text-align:center;">
+               Locating nearby<br>{{ hero_trip.vehicle_type_booked or 'Vehicles' }}...
+            </div>
+        {% endif %}
+        
+        <div style="position: absolute; bottom: 10px; left: 10px; font-size: 0.7rem; color: rgba(255,255,255,0.7); max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          📍 {{ hero_trip.pickup_location.split(',')[0] }}
+        </div>
+      </div>
+
+      <div class="driver-info">
+        {% if hero_trip.driver_name %}
+            <img src="{{ hero_trip.driver_photo }}" alt="Driver" class="driver-avatar">
+            <div class="driver-text">
+              <h4>{{ hero_trip.driver_name }}</h4>
+              <p>{{ hero_trip.vehicle_model }} • {{ hero_trip.vehicle_reg_no }}</p>
+            </div>
+            <div style="margin-left: auto; text-align: right; color: white;">
+              <div style="font-size: 0.8rem; color: #94a3b8;">ETA</div>
+              <div style="font-weight: 700;">{{ hero_trip.eta_mins }} Mins</div>
+            </div>
+        {% else %}
+            <div class="driver-avatar" style="background: #374151; display:flex; align-items:center; justify-content:center;">
+               <span style="font-size:1.2rem;">📡</span>
+            </div>
+            <div class="driver-text">
+              <h4>Connecting...</h4>
+              <p>Finding best driver for you</p>
+            </div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% else %}
+    <div class="hero-carousel-3d">
+  
+  <div class="live-badge">
+     <div class="live-dot"></div>
+     Fleet Online
+  </div>
+
+  <div class="carousel-track">
+     
+     <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/3-wheeler.png') }}" alt="3-Wheeler">
+        <div class="carousel-overlay">
+           <h3>3-Wheeler</h3>
+           <p>Upto 500kg • City & Local</p>
+        </div>
+     </div>
+
+     <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/mini truck.png') }}" alt="Mini Truck">
+        <div class="carousel-overlay">
+           <h3>Mini Truck</h3>
+           <p>Upto 1 Ton • Small Loads</p>
+        </div>
+     </div>
+
+     <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/pickup.png') }}" alt="Pickup">
+        <div class="carousel-overlay">
+           <h3>Pickup</h3>
+           <p>Upto 1.5 Ton • Durable Haul</p>
+        </div>
+     </div>
+
+     <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/tempo.png') }}" alt="Tempo">
+        <div class="carousel-overlay">
+           <h3>Tempo</h3>
+           <p>Upto 2 Ton • Mid-Sized Goods</p>
+        </div>
+     </div>
+
+     <div class="carousel-slide">
+        <img src="{{ url_for('static', filename='images/truck1.png') }}" alt="Truck">
+        <div class="carousel-overlay">
+           <h3>Truck</h3>
+           <p>2+ Ton • Heavy Logistics</p>
+        </div>
+     </div>
+
+  </div>
+</div>
+  {% endif %}
+
+  <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: #ef4444; filter: blur(100px); opacity: 0.2; z-index: -1;"></div>
+
+</div>
+
+  </div>
+  
+  <div class="hero-particles" id="particles"></div>
+</section>
+    
+    <section id="track-section" class="section-padding" style="background-color: #f8fafc; text-align: center; min-height: 50vh;">
+        <div class="container">
+             <div class="section-header">
+                <span class="eyebrow-title">SHIPMENT STATUS</span>
+                <h2 class="main-title">Track Your Goods</h2>
+                <p class="section-subtitle">Enter your tracking ID below to check the real-time status of your consignment.</p>
+            </div>
+            <div id="tracking-form-container" style="max-width: 600px; margin: 3rem auto;">
+                <form id="trackingForm" style="display:flex; gap: 10px;">
+                    <input type="text" id="trackingId" class="form-input location-input" placeholder="Enter Tracking ID (e.g., QL-2026XXXX-XXXXXX)" required style="border-radius: 50px; flex-grow: 1;" />
+                    <button type="submit" class="hero-cta" style="min-width: 150px; padding: 10px 20px; font-weight: 600; font-size: 1rem; letter-spacing: 0;">Track</button>
+                </form>
+                <div id="trackingResults" style="margin-top: 2rem; text-align: left;"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section" id="form-section">
+      <div class="booking-wrapper">
+        <div class="booking-image-container">
+          <img
+            src="{{ url_for('static', filename='images/hand-mobile.png') }}"
+            alt="Logistics Truck Illustration"
+          />
+        </div>
+
+        <div class="booking-form-container">
+          <h1 class="form-title">Get a Quote and Book</h1>
+          <form id="bookingForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="fullName"> Full Name </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  class="form-input"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="age"> Age </label>
+                <input
+                  type="number"
+                  id="age"
+                  class="form-input"
+                  placeholder="e.g., 25"
+                  min="18"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="gender"> Gender </label>
+                <select id="gender" class="form-select" required>
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Prefer not to say</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="email"> Email ID </label>
+                <input
+                  type="email"
+                  id="email"
+                  class="form-input"
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="mobile"> Mobile Number </label>
+                <input
+                  type="tel"
+                  id="mobile"
+                  class="form-input"
+                  placeholder="Enter mobile number"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="alternateMobile">
+                  Alternate Mobile Number (Optional)
+                </label>
+                <input
+                  type="tel"
+                  id="alternateMobile"
+                  class="form-input"
+                  placeholder="Enter another mobile number"
+                />
+              </div>
+              <div class="form-group full-width">
+    <label class="form-label" for="pickupLocation">📍 Pickup Location</label>
+    <div class="location-group">
+        <div class="input-wrapper">
+            <input
+                type="text"
+                id="pickupLocation"
+                class="form-input location-input"
+                placeholder="Type address to search..."
+                autocomplete="off"
+                required
+            />
+            <div id="pickupResults" class="autocomplete-results"></div>
+        </div>
+        <button type="button" class="location-btn" onclick="useCurrentLocation('pickup')">📍 Current</button>
+        <button type="button" class="location-btn" onclick="chooseOnMap('pickup')">🗺️ Map</button>
+    </div>
+    <div id="pickupLocationInfo" class="location-info"></div>
+    <input type="hidden" id="pickupLat" name="pickupLat" />
+    <input type="hidden" id="pickupLng" name="pickupLng" />
+</div>
+
+<div class="form-group full-width">
+    <label class="form-label" for="dropLocation">📍 Drop Location</label>
+    <div class="location-group">
+        <div class="input-wrapper">
+            <input
+                type="text"
+                id="dropLocation"
+                class="form-input location-input"
+                placeholder="Type address to search..."
+                autocomplete="off"
+                required
+            />
+            <div id="dropResults" class="autocomplete-results"></div>
+        </div>
+        <button type="button" class="location-btn" onclick="useCurrentLocation('drop')">📍 Current</button>
+        <button type="button" class="location-btn" onclick="chooseOnMap('drop')">🗺️ Map</button>
+    </div>
+    <div id="dropLocationInfo" class="location-info"></div>
+    <input type="hidden" id="dropLat" name="dropLat" />
+    <input type="hidden" id="dropLng" name="dropLng" />
+</div>
+              <div class="form-group">
+                <label class="form-label" for="loadWeight">
+                  Load Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  id="loadWeight"
+                  class="form-input"
+                  placeholder="e.g., 500"
+                  min="1"
+                  required
+                />
+              </div>
+             
+              <div class="form-group">
+                <label class="form-label" for="vehicleType">
+                  Type of Vehicle
+                </label>
+
+                <div class="custom-select-wrapper">
+                  <input
+                    type="text"
+                    id="vehicleTypeInput"
+                    class="form-input"
+                    placeholder="Click to Select Vehicle"
+                    readonly
+                    required
+                  />
+                  <input type="hidden" id="vehicleType" name="vehicleType" />
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+  <label class="form-label" for="tollPreference">
+    Toll Payment Preference
+  </label>
+
+  <select id="tollPreference" class="form-select" required>
+    <option value="">Select Toll Payment Option</option>
+    <option value="prepaid">
+      Include in Booking Total (Prepaid)
+    </option>
+    <option value="pay_at_plaza">
+      Pay at Plaza (Lower Booking Cost)
+    </option>
+  </select>
+</div>
+
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="terms" required />
+              <label class="checkbox-label" for="terms">
+                I agree to the Terms & Conditions and Privacy Policy
+              </label>
+            </div>
+            <div style="text-align: center; margin-top: 1rem">
+              <button type="submit" class="search-btn">
+                Search Available Vehicles
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+   <section class="features-realistic" id="features">
+  <div class="features-container-modern">
+    
+    <div class="modern-header">
+      <span class="eyebrow">Why Choose Us</span>
+      <h2>The Future of Logistics</h2>
+      <p>
+        We combine cutting-edge technology with a massive driver network to bring you the fastest, safest, and most affordable transport solution.
+      </p>
+    </div>
+
+    <div class="features-grid-modern">
+      
+      <div class="feature-card-glass">
+        <span class="bg-number">01</span>
+        <div class="f-icon-box">
+          <img src="{{ url_for('static', filename='images/icon(8).png') }}" alt="Tracking">
+        </div>
+        <h3 class="f-title">Live GPS Tracking</h3>
+        <p class="f-desc">
+          Never lose sight of your goods. Watch your shipment move across the map in real-time with our advanced satellite tracking system.
+        </p>
+      </div>
+
+      <div class="feature-card-glass">
+        <span class="bg-number">02</span>
+        <div class="f-icon-box">
+           <img src="{{ url_for('static', filename='images/icon (5).png') }}" alt="Instant Booking">
+        </div>
+        <h3 class="f-title">Instant Booking</h3>
+        <p class="f-desc">
+          No phone calls needed. Our AI matching algorithm finds the nearest available vehicle for you in under 30 seconds.
+        </p>
+      </div>
+
+      <div class="feature-card-glass">
+        <span class="bg-number">03</span>
+        <div class="f-icon-box">
+           <img src="{{ url_for('static', filename='images/icon (1).png') }}" alt="Direct">
+        </div>
+        <h3 class="f-title">No Middleman</h3>
+        <p class="f-desc">
+          Zero hidden fees. You pay exactly what you see. We connect you directly with drivers, eliminating middleman commissions.
+        </p>
+      </div>
+
+      <div class="feature-card-glass">
+        <span class="bg-number">04</span>
+        <div class="f-icon-box">
+           <img src="{{ url_for('static', filename='images/icon (4).png') }}" alt="Secure Payment">
+        </div>
+        <h3 class="f-title">Secure Payments</h3>
+        <p class="f-desc">
+          Pay with confidence using UPI, Cards, or Net Banking. Your transactions are protected by industry-standard encryption.
+        </p>
+      </div>
+
+      <div class="feature-card-glass">
+        <span class="bg-number">05</span>
+        <div class="f-icon-box">
+           <img src="{{ url_for('static', filename='images/icon (3).png') }}" alt="Network">
+        </div>
+        <h3 class="f-title">Pan-India Network</h3>
+        <p class="f-desc">
+          From bustling metros to remote towns, our network covers 500+ cities, ensuring your goods reach any destination.
+        </p>
+      </div>
+
+      <div class="feature-card-glass">
+        <span class="bg-number">06</span>
+        <div class="f-icon-box">
+           <img src="{{ url_for('static', filename='images/icon (2).png') }}" alt="Support">
+        </div>
+        <h3 class="f-title">24/7 Priority Support</h3>
+        <p class="f-desc">
+          Our dedicated logistics team is awake when you are. Get instant resolution for any queries via chat or phone.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+   <section class="how-it-works section-padding" id="how-it-works">
+  <div class="container">
+    <div class="section-header" style="text-align: center;">
+      <span class="eyebrow-title">SIMPLE WORKFLOW</span>
+      <h2 class="main-title">How It Works</h2>
+      <p class="section-subtitle">
+        From booking to delivery, our process is streamlined for your convenience.
+      </p>
+    </div>
+    
+    <div class="process-image-container" style="text-align: center; margin-top: 3rem;">
+        <img 
+          src="{{ url_for('static', filename='images/process.png') }}" 
+          alt="QuickLoad Process Flow" 
+          style="width: 100%; max-width: 100%; height: auto; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.1);"
+        >
+    </div>
+
+  </div>
+</section>
+    
+    <section class="testimonials section-padding" id="testimonials">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow-title">VOICES OF OUR CUSTOMERS</span>
+          <h2 class="main-title">Trusted by India's Best</h2>
+          <p class="section-subtitle">
+            See what businesses and individuals are saying about their QuickLoad experience.
+          </p>
+        </div>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <div class="quote-icon">❝</div>
+            <p class="quote-text">
+              QuickLoad completely transformed our supply chain. Real-time tracking is a game-changer, and the transparent pricing saved us thousands. Highly recommended for bulk logistics.
+            </p>
+            <div class="user-info">
+              <div class="user-avatar">MK</div>
+              <div class="user-details">
+                <p class="user-name">Mohan Kumar</p>
+                <p class="user-title">Logistics Manager, MegaMart</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="quote-icon">❝</div>
+            <p class="quote-text">
+              The instant booking feature is incredibly fast. We moved urgent machinery from Mumbai to Pune within hours. It's truly a seamless, hassle-free service.
+            </p>
+            <div class="user-info">
+              <div class="user-avatar">SS</div>
+              <div class="user-details">
+                <p class="user-name">Sanya Sharma</p>
+                <p class="user-title">E-commerce Founder, QuickShip</p>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="quote-icon">❝</div>
+            <p class="quote-text">
+              I used it for shifting household goods, and the experience was professional from start to finish. The driver was courteous, and the vehicle was well-maintained. Excellent service!
+            </p>
+            <div class="user-info">
+              <div class="user-avatar">RJ</div>
+              <div class="user-details">
+                <p class="user-name">Ravi Jadhav</p>
+                <p class="user-title">Individual Customer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta-section">
+      <div class="final-cta-container">
+        <div class="cta-content">
+          <h2 class="cta-title">Ready to Move Your Goods?</h2>
+          <p class="cta-subtitle">Get started today and join thousands of satisfied customers across India.</p>
+        </div>
+        <div class="cta-buttons">
+          <a href="#form-section" class="hero-cta" style="margin-right: 1.5rem;">Book Now</a>
+          <a href="#footer" class="hero-cta secondary">Contact Sales</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer" id="footer">
+      <div class="footer-container">
+        <div class="footer-section">
+          <h3>QuickLoad</h3>
+          <p>
+            Revolutionizing goods transportation across India with
+            technology-driven solutions for businesses and individuals.
+          </p>
+          <p style="margin-top: 1rem">
+            📧 support@QuickLLoad.com<br />
+            📞 +91 1800-XXX-XXXX<br />
+            📍 Bangalore, Karnataka, India
+          </p>
+        </div>
+        <div class="footer-section">
+          <h3>Services</h3>
+          <p><a href="#">Same Day Delivery</a></p>
+          <p><a href="#">Express Shipping</a></p>
+          <p><a href="#">Bulk Transportation</a></p>
+          <p><a href="#">Enterprise Solutions</a></p>
+          <p><a href="#">API Integration</a></p>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <p><a href="#">About Us</a></p>
+          <p><a href="#">Careers</a></p>
+          <p><a href="#">Press & Media</a></p>
+          <p><a href="#">Partner With Us</a></p>
+          <p><a href="#">Investor Relations</a></p>
+        </div>
+        <div class="footer-section">
+          <h3>Support</h3>
+          <p><a href="#">Help Center</a></p>
+          <p><a href="#">Terms of Service</a></p>
+          <p><a href="#">Privacy Policy</a></p>
+          <p><a href="#">Refund Policy</a></p>
+          <p><a href="#">Track Shipment</a></p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          &copy; 2026 QuickLoad. All rights reserved. Made with ❤️ for India's
+          logistics revolution.
+        </p>
+      </div>
+    </footer>
+
+    <div id="vehicleModal" class="modal-overlay">
+      <div class="modal-content-wide">
+        <div class="modal-header">
+          <h2 class="modal-title">Select Vehicle Type</h2>
+          <button id="closeVehicleModalBtn" class="modal-close-btn">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body" id="vehicleOptionsContainer">
+          <div
+            class="vehicle-option"
+            data-value="3-wheeler"
+            data-text="3-Wheeler (Up to 500kg)"
+          >
+            <img
+              src="{{ url_for('static', filename='images/3-wheeler.png') }}"
+              alt="3-Wheeler Icon"
+              class="vehicle-icon"
+            />
+            <div class="vehicle-details">
+              <h3 class="vehicle-name">3-Wheeler</h3>
+              <p class="vehicle-capacity">Up to 500kg</p>
+            </div>
+          </div>
+          <div
+            class="vehicle-option"
+            data-value="mini-truck"
+            data-text="Mini Truck (Up to 1 Ton)"
+          >
+            <img
+              src="{{ url_for('static', filename='images/mini truck.png') }}"
+              alt="Mini Truck Icon"
+              class="vehicle-icon"
+            />
+            <div class="vehicle-details">
+              <h3 class="vehicle-name">Mini Truck</h3>
+              <p class="vehicle-capacity">Up to 1 Ton</p>
+            </div>
+          </div>
+
+          <div
+            class="vehicle-option"
+            data-value="pickup"
+            data-text="Pickup (Up to 1.5 Ton)"
+          >
+            <img
+              src="{{ url_for('static', filename='images/pickup.png') }}"
+              alt="Pickup Icon"
+              class="vehicle-icon"
+            />
+            <div class="vehicle-details">
+              <h3 class="vehicle-name">Pickup</h3>
+              <p class="vehicle-capacity">Up to 1.5 Ton</p>
+            </div>
+          </div>
+
+          <div
+            class="vehicle-option"
+            data-value="tempo"
+            data-text="Tempo (Up to 2 Ton)"
+          >
+            <img
+              src="{{ url_for('static', filename='images/tempo.png') }}"
+              alt="Tempo Icon"
+              class="vehicle-icon"
+            />
+            <div class="vehicle-details">
+              <h3 class="vehicle-name">Tempo</h3>
+              <p class="vehicle-capacity">Up to 2 Ton</p>
+            </div>
+          </div>
+
+          <div
+            class="vehicle-option"
+            data-value="truck"
+            data-text="Truck (2+ Ton)"
+          >
+            <img
+              src="{{ url_for('static', filename='images/truck1.png') }}"
+              alt="Truck Icon"
+              class="vehicle-icon"
+            />
+            <div class="vehicle-details">
+              <h3 class="vehicle-name">Truck</h3>
+              <p class="vehicle-capacity">2+ Ton</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="mapModal" class="modal-overlay">
+      <div class="modal-content-wide">
+        <div class="modal-header">
+          <h2 class="modal-title">Select Location on Map</h2>
+          <button id="closeMapModalBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="map-search-container">
+            <input
+              type="text"
+              id="mapSearchInput"
+              class="form-input"
+              placeholder="Search for an address or place..."
+            />
+          </div>
+          <div id="mapContainer" class="map-container-modal"></div>
+        </div>
+        <div id="modalLocationInfo" class="location-info"></div>
+        <div class="modal-footer">
+          <button id="confirmLocationBtn" class="search-btn">
+            Confirm Location
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- START: CORE JS FUNCTIONS ---
+      
+      // Mobile Menu Toggle with Animation
+      const hamburger = document.getElementById("hamburger");
+      const navLinks = document.getElementById("navLinks");
+
+      hamburger.addEventListener("click", () => {
+        navLinks.classList.toggle("active");
+        hamburger.classList.toggle("active");
+      });
+
+      // Dropdown Menus
+      const userDropdown = document.getElementById("userDropdown");
+
+      userDropdown.addEventListener("click", (e) => {
+      //e.preventDefault();
+        userDropdown.classList.toggle("active");
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!userDropdown.contains(e.target)) {
+          userDropdown.classList.remove("active");
+        }
+      });
+
+      // Enhanced Header Scroll Effect
+      window.addEventListener("scroll", () => {
+        const header = document.querySelector(".header");
+        if (window.scrollY > 50) {
+          header.classList.add("scrolled");
+        } else {
+          header.classList.remove("scrolled");
+        }
+      });
+
+      // Smooth Scrolling for Navigation Links
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+            navLinks.classList.remove("active");
+          }
+        });
+      });
+
+      // Create Floating Particles Animation
+      function createParticles() {
+        const particlesContainer = document.getElementById("particles");
+        if (!particlesContainer) return; 
+        const particleCount = 15;
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement("div");
+          particle.className = "particle";
+          const size = Math.random() * 6 + 2;
+          particle.style.width = size + "px";
+          particle.style.height = size + "px";
+          particle.style.left = Math.random() * 100 + "%";
+          particle.style.animationDelay = Math.random() * 15 + "s";
+          particle.style.animationDuration = Math.random() * 10 + 10 + "s";
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      // Intersection Observer for Animation on Scroll
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -100px 0px",
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = "1";
+            entry.target.style.transform = "translateY(0)";
+          }
+        });
+      }, observerOptions);
+
+      function initializeAnimations() {
+        document
+          .querySelectorAll(".feature-card, .step, .booking-wrapper, .testimonial-card")
+          .forEach((el) => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(30px)";
+            el.style.transition = "all 0.6s ease";
+            observer.observe(el);
+          });
+      }
+      
+      // Initialize particles and animations
+      window.addEventListener("load", createParticles);
+      document.addEventListener("DOMContentLoaded", initializeAnimations);
+      
+      // --- END: CORE JS FUNCTIONS ---
+      
+      // --- START: LEAFLET & OPENSTREETMAP SCRIPT ---
+
+let map, marker, activeType;
+let debounceTimer; // Limits API calls
+let tempLocation = {}; // Stores modal selection temporarily
+
+// 1. Initialize Map inside Modal
+function initMap() {
+    if (map) return; // Prevent re-initialization
+
+    // Create Map (Centered on India)
+    map = L.map('mapContainer').setView([20.5937, 78.9629], 5);
+
+    // Add OpenStreetMap Tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Add Search Control (Magnifying Glass on Map)
+    L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "Search map...",
+        geocoder: L.Control.Geocoder.nominatim()
+    })
+    .on('markgeocode', function(e) {
+        const latlng = e.geocode.center;
+        updateMarker(latlng, e.geocode.name);
+        map.setView(latlng, 15);
+    })
+    .addTo(map);
+
+    // Click Map to Place Marker
+    map.on('click', function(e) {
+        updateMarker(e.latlng);
+        reverseGeocodeMap(e.latlng.lat, e.latlng.lng);
+    });
+}
+
+// Helper: Update Marker Position & Info
+function updateMarker(latlng, address = null) {
+    if (marker) {
+        marker.setLatLng(latlng);
+    } else {
+        marker = L.marker(latlng).addTo(map);
+    }
+
+    if (address) {
+        tempLocation = { address: address, lat: latlng.lat, lng: latlng.lng };
+        updateModalInfo(address);
+    }
+}
+
+// Helper: Reverse Geocode for Map Clicks
+async function reverseGeocodeMap(lat, lng) {
+    const infoDiv = document.getElementById("modalLocationInfo");
+    infoDiv.style.display = 'block';
+    infoDiv.innerHTML = "Fetching address...";
+    
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const address = data.display_name || "Unknown Location";
+        tempLocation = { address: address, lat: lat, lng: lng };
+        updateModalInfo(address);
+    } catch (error) {
+        console.error("Geocoding error:", error);
+        infoDiv.innerHTML = "Error fetching address.";
+    }
+}
+
+function updateModalInfo(address) {
+    const infoDiv = document.getElementById("modalLocationInfo");
+    infoDiv.innerHTML = `<strong>Selected:</strong><br>${address}`;
+    infoDiv.style.display = 'block';
+}
+
+// 2. Main Form Autocomplete (Debounced)
+async function searchAddress(query, resultId, inputId, latId, lngId) {
+    const resultsDiv = document.getElementById(resultId);
+    
+    if (query.length < 3) {
+        resultsDiv.style.display = 'none';
+        return;
+    }
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=in`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        resultsDiv.innerHTML = '';
+        
+        if (data.length > 0) {
+            resultsDiv.style.display = 'block';
+            data.forEach(place => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.textContent = place.display_name;
+                
+                // Click Handler for Result
+                item.addEventListener('click', () => {
+                    document.getElementById(inputId).value = place.display_name;
+                    document.getElementById(latId).value = place.lat;
+                    document.getElementById(lngId).value = place.lon;
+                    
+                    // Show confirmation under input
+                    const infoDiv = document.getElementById(inputId + 'Info');
+                    infoDiv.innerHTML = `<strong>Selected:</strong> ${place.display_name}`;
+                    infoDiv.style.display = 'block';
+                    
+                    resultsDiv.style.display = 'none';
+                });
+                
+                resultsDiv.appendChild(item);
+            });
+        } else {
+            resultsDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error("Search error:", error);
+    }
+}
+
+// Attach Input Listeners with Debounce (300ms delay)
+function setupAutocomplete(inputId, resultId, latId, lngId) {
+    const input = document.getElementById(inputId);
+    input.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            searchAddress(e.target.value, resultId, inputId, latId, lngId);
+        }, 300);
+    });
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.input-wrapper')) {
+            document.getElementById(resultId).style.display = 'none';
+        }
+    });
+}
+
+// Initialize listeners
+setupAutocomplete('pickupLocation', 'pickupResults', 'pickupLat', 'pickupLng');
+setupAutocomplete('dropLocation', 'dropResults', 'dropLat', 'dropLng');
+
+
+// 3. Modal Controls
+function chooseOnMap(type) {
+    activeType = type;
+    const modal = document.getElementById('mapModal');
+    modal.classList.add('active');
+    
+    // Initialize map
+    initMap();
+    
+    // Fix: Leaflet needs to know container size changed
+    setTimeout(() => {
+        map.invalidateSize();
+        
+        // If location exists, move marker there
+        const currentLat = document.getElementById(type + 'Lat').value;
+        const currentLng = document.getElementById(type + 'Lng').value;
+        if(currentLat && currentLng) {
+            const loc = [currentLat, currentLng];
+            updateMarker(loc, document.getElementById(type + 'Location').value);
+            map.setView(loc, 15);
+        }
+    }, 200);
+}
+
+document.getElementById('closeMapModalBtn').addEventListener('click', () => {
+    document.getElementById('mapModal').classList.remove('active');
+});
+
+document.getElementById('confirmLocationBtn').addEventListener('click', () => {
+    if (tempLocation.address) {
+        document.getElementById(activeType + 'Location').value = tempLocation.address;
+        document.getElementById(activeType + 'Lat').value = tempLocation.lat;
+        document.getElementById(activeType + 'Lng').value = tempLocation.lng;
+        
+        const infoDiv = document.getElementById(activeType + 'LocationInfo');
+        infoDiv.innerHTML = `<strong>Selected:</strong> ${tempLocation.address}`;
+        infoDiv.style.display = 'block';
+        
+        document.getElementById('mapModal').classList.remove('active');
+    } else {
+        alert("Please select a location on the map first.");
+    }
+});
+
+// 4. Current Location Logic (using Nominatim Reverse Geocoding)
+function useCurrentLocation(type) {
+    if (navigator.geolocation) {
+        const btn = event.target; // Get the button clicked
+        const originalText = btn.textContent;
+        btn.textContent = "⌛ Finding...";
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                document.getElementById(type + 'Location').value = data.display_name;
+                document.getElementById(type + 'Lat').value = lat;
+                document.getElementById(type + 'Lng').value = lng;
+                
+                const infoDiv = document.getElementById(type + 'LocationInfo');
+                infoDiv.innerHTML = `<strong>Current Location:</strong> ${data.display_name}`;
+                infoDiv.style.display = 'block';
+            } catch (error) {
+                alert("Could not fetch address details.");
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }, () => {
+            alert("Location access denied.");
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+    } else {
+        alert("Geolocation is not supported by your browser.");
+    }
+}
+// --- END: LEAFLET & OPENSTREETMAP SCRIPT ---
+      
+      // --- START: VEHICLE MODAL SCRIPT ---
+      const vehicleTypeInput = document.getElementById("vehicleTypeInput");
+      const vehicleModal = document.getElementById("vehicleModal");
+      const closeVehicleModalBtn = document.getElementById("closeVehicleModalBtn");
+      const vehicleOptionsContainer = document.getElementById("vehicleOptionsContainer");
+      const hiddenVehicleInput = document.getElementById("vehicleType");
+
+      // 1. Open the modal
+      vehicleTypeInput.addEventListener("click", () => {
+          vehicleModal.classList.add("active");
+      });
+
+      // 2. Close the modal
+      closeVehicleModalBtn.addEventListener("click", () => {
+          vehicleModal.classList.remove("active");
+      });
+
+      // 3. Close the modal on overlay click
+      vehicleModal.addEventListener("click", (e) => {
+          if (e.target.id === "vehicleModal") {
+              vehicleModal.classList.remove("active");
+          }
+      });
+
+      // 4. Handle the selection of a vehicle
+      vehicleOptionsContainer.addEventListener("click", (e) => {
+          const selectedOption = e.target.closest(".vehicle-option");
+
+          if (selectedOption) {
+              // First, remove 'selected' class from all options
+              document.querySelectorAll('.vehicle-option').forEach(opt => opt.classList.remove('selected'));
+              
+              // Add 'selected' class to the clicked option
+              selectedOption.classList.add('selected');
+              
+              const vehicleValue = selectedOption.dataset.value;
+              const vehicleText = selectedOption.dataset.text;
+
+              // Update the visible input field
+              vehicleTypeInput.value = vehicleText;
+
+              // Update the hidden input field for form submission
+              hiddenVehicleInput.value = vehicleValue;
+
+              // Close the modal
+              vehicleModal.classList.remove("active");
+              
+              // Trigger input event for validation
+              vehicleTypeInput.dispatchEvent(new Event('input'));
+          }
+      });
+      // --- END: VEHICLE MODAL SCRIPT ---
+      
+      // --- START: ADVANCED TRACKING SCRIPT (Placeholder) ---
+      
+      // Real-time PNR Redirection Logic
+document.getElementById("trackingForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const trackingId = document.getElementById("trackingId").value.trim();
+    const resultsDiv = document.getElementById("trackingResults");
+    const trackButton = e.submitter;
+    const originalText = trackButton.innerHTML;
+
+    // UI Feedback: Show searching state
+    trackButton.innerHTML = "🔍 Locating...";
+    trackButton.disabled = true;
+    resultsDiv.innerHTML = "";
+
+    try {
+        // Step 1: Search for the PNR in the database
+        const response = await fetch(`/api/search-tracking/${trackingId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            // Step 2: Redirect to the professional live tracking page
+            trackButton.innerHTML = "✅ Found! Loading Map...";
+            window.location.href = `/track-live/${result.trip_id}`;
+        } else {
+            // Step 3: Handle errors professionally
+            resultsDiv.innerHTML = `
+                <div style="border: 1px solid #dc2626; border-radius: 12px; padding: 15px; background: #fef2f2; color: #dc2626; text-align: left; margin-top: 15px;">
+                    <strong style="display: block; margin-bottom: 5px;">Tracking Error:</strong> 
+                    ${result.message}
+                </div>
+            `;
+            trackButton.innerHTML = originalText;
+            trackButton.disabled = false;
+        }
+    } catch (error) {
+        console.error('Tracking Search Error:', error);
+        trackButton.innerHTML = originalText;
+        trackButton.disabled = false;
+        showCustomAlert("A network error occurred. Please try again.");
+    }
+});
+      
+      // --- START: ADVANCED FORM SUBMISSION & VALIDATION (MODIFIED FOR REDIRECTION) ---
+      
+      const bookingForm = document.getElementById("bookingForm");
+      
+      function validateField(field) {
+          const isValid = field.checkValidity();
+          if (!isValid) {
+              field.style.borderColor = "#dc2626";
+              field.style.boxShadow = "0 0 0 3px rgba(220, 38, 38, 0.2)";
+              return false;
+          } else {
+              field.style.borderColor = "#10b981";
+              field.style.boxShadow = "0 0 0 3px rgba(16, 185, 129, 0.2)";
+              return true;
+          }
+      }
+
+      function validateForm() {
+          let isFormValid = true;
+          const requiredFields = bookingForm.querySelectorAll("[required]");
+          
+          requiredFields.forEach((field) => {
+              if (!validateField(field)) {
+                  isFormValid = false;
+              }
+          });
+          
+          // Additional checks for location fields
+          const pickupLat = document.getElementById("pickupLat").value;
+          const dropLat = document.getElementById("dropLat").value;
+          
+          if (!pickupLat || !dropLat) {
+              // Using custom alert instead of browser alert
+              showCustomAlert("Please select both Pickup and Drop locations using either the search or map tool.");
+              isFormValid = false;
+          }
+
+          return isFormValid;
+      }
+      
+      bookingForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          
+          if (!validateForm()) {
+              // Using custom alert instead of browser alert
+              showCustomAlert("Please correct the highlighted errors in the form before proceeding.");
+              return;
+          }
+          
+          const submitButton = document.querySelector(".search-btn");
+          const originalText = submitButton.innerHTML;
+          
+          submitButton.innerHTML = "🔍 Calculating Quote...";
+          submitButton.disabled = true;
+          
+          // Collect all form data into an object
+          const formData = {
+              fullName: document.getElementById('fullName').value,
+              age: document.getElementById('age').value,
+              gender: document.getElementById('gender').value,
+              email: document.getElementById('email').value,
+              mobile: document.getElementById('mobile').value,
+              alternateMobile: document.getElementById('alternateMobile').value,
+              
+              pickupLocation: document.getElementById('pickupLocation').value,
+              pickupLat: document.getElementById('pickupLat').value,
+              pickupLng: document.getElementById('pickupLng').value,
+              
+              dropLocation: document.getElementById('dropLocation').value,
+              dropLat: document.getElementById('dropLat').value,
+              dropLng: document.getElementById('dropLng').value,
+              
+              loadWeight: document.getElementById('loadWeight').value,
+              vehicleType: document.getElementById('vehicleType').value,
+              vehicleTypeText: document.getElementById('vehicleTypeInput').value,
+
+              tollPreference: document.getElementById('tollPreference').value,
+              
+              termsAgreed: document.getElementById('terms').checked
+          };
+
+          try {
+              // Step 1: Send data to Flask backend to save in session and get redirect URL
+              const response = await fetch("{{ url_for('process_booking') }}", {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(formData)
+              });
+              
+              const result = await response.json();
+
+              if (result.success) {
+                  submitButton.innerHTML = "✅ Redirecting...";
+                  // Step 2: Redirect to the new vehicle selection page
+                  window.location.href = result.redirect_url;
+              } else {
+                  // Handle backend validation/error messages
+                  submitButton.innerHTML = originalText;
+                  submitButton.disabled = false;
+                  showCustomAlert("Booking Error: " + result.message);
+              }
+          } catch (error) {
+              console.error('Network or Parsing Error:', error);
+              submitButton.innerHTML = originalText;
+              submitButton.disabled = false;
+              showCustomAlert("A network error occurred. Please try again.");
+          }
+      });
+
+      // Bind validation to form fields on blur/input
+      document.querySelectorAll(".form-input, .form-select").forEach(field => {
+          field.addEventListener("blur", () => validateField(field));
+          field.addEventListener("input", () => {
+              if (field.type !== "text" || field.type !== "email") {
+                  validateField(field);
+              }
+          });
+      });
+      // --- END: ADVANCED FORM SUBMISSION & VALIDATION ---
+      
+      // --- CUSTOM ALERT MODAL IMPLEMENTATION (Replaces alert()) ---
+      
+      const customAlertModal = document.createElement('div');
+      customAlertModal.className = 'modal-overlay';
+      customAlertModal.innerHTML = `
+          <div class="modal-content-wide" style="max-width: 400px; text-align: center;">
+              <div class="modal-header" style="border-bottom: none;">
+                  <h2 class="modal-title" id="customAlertTitle" style="color: #dc2626;">System Notification</h2>
+                  <button id="closeCustomAlertBtn" class="modal-close-btn">&times;</button>
+              </div>
+              <div class="modal-body" style="padding-top: 0;">
+                  <p id="customAlertMessage" style="font-size: 1.1rem; margin-bottom: 20px;"></p>
+                  <button id="okCustomAlertBtn" class="search-btn" style="padding: 0.8rem 2rem; width: 100%;">OK</button>
+              </div>
+          </div>
+      `;
+      document.body.appendChild(customAlertModal);
+
+      function showCustomAlert(message, title = "Validation Error") {
+          document.getElementById('customAlertTitle').textContent = title;
+          document.getElementById('customAlertMessage').textContent = message;
+          customAlertModal.classList.add('active');
+          document.getElementById('okCustomAlertBtn').focus();
+      }
+      
+      function closeCustomAlert() {
+          customAlertModal.classList.remove('active');
+      }
+
+      document.getElementById('closeCustomAlertBtn').addEventListener('click', closeCustomAlert);
+      document.getElementById('okCustomAlertBtn').addEventListener('click', closeCustomAlert);
+      customAlertModal.addEventListener('click', (e) => {
+          if (e.target === customAlertModal) {
+              closeCustomAlert();
+          }
+      });
+      
+      // --- END CUSTOM ALERT MODAL IMPLEMENTATION ---
+      
+    </script>
+   
+  </body>
+</html>

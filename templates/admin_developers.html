@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team & Developers - QuickLoad</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"/>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+      :root {
+        --primary-color: #c9a24d;
+        --dark-color: #1f2937;
+        --header-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-bg: #dcfce7;
+        --success-text: #166534;
+        --danger-bg: #fee2e2;
+        --danger-text: #991b1b;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        min-height: 100vh;
+      }
+
+      /* --- Navigation --- */
+      .top-header {
+          background-color: var(--header-bg);
+          color: #ffffff;
+          padding: 0 5%;
+          height: 70px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          z-index: 1001;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      .header-left { display: flex; align-items: center; gap: 40px; }
+      .logo img { height: 45px; vertical-align: middle; }
+      
+      .top-nav-list { display: flex; list-style: none; gap: 10px; }
+      .top-nav-item a {
+          color: #d1d5db;
+          text-decoration: none;
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+      }
+      .top-nav-item a:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+      .top-nav-item a.active { background-color: var(--primary-color); color: #ffffff; font-weight: 600; }
+
+      .header-actions { display: flex; align-items: center; gap: 20px; }
+      .admin-info { display: flex; align-items: center; gap: 10px; color: #d1d5db; font-size: 0.9rem; }
+      .admin-avatar { width: 32px; height: 32px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; }
+      .logout-btn {
+          display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+          border-radius: 8px; background-color: var(--danger-bg); color: var(--danger-text);
+          text-decoration: none; font-weight: 600; transition: 0.3s ease;
+      }
+
+      /* --- Main Content --- */
+      .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 5%; width: 100%; }
+      
+      .page-header { 
+          display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; 
+      }
+      .page-title h1 { font-size: 2rem; font-weight: 700; color: var(--dark-color); margin-bottom: 5px;}
+      .page-title p { color: var(--text-light); }
+
+      .action-buttons { display: flex; gap: 15px; }
+      .btn-add {
+          padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;
+          display: flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.2s;
+          background: var(--primary-color); color: white;
+      }
+      .btn-add:hover { background: #b08d3e; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(201, 154, 77, 0.3); }
+      .btn-secondary { background: white; color: var(--dark-color); border: 1px solid var(--border-color); }
+      .btn-secondary:hover { background: #f3f4f6; transform: translateY(-2px); }
+
+      /* --- SECTIONS & CARDS --- */
+      .section-label { 
+          font-size: 1.1rem; font-weight: 600; color: var(--dark-color); margin: 40px 0 20px; 
+          padding-bottom: 10px; border-bottom: 2px solid var(--border-color); display: flex; align-items: center; gap: 10px;
+      }
+
+      .grid-container {
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px;
+      }
+
+      .team-card {
+          background: white; border-radius: 16px; padding: 30px; position: relative;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border-color);
+          transition: all 0.3s ease; text-align: center; overflow: hidden;
+      }
+      .team-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--primary-color); }
+
+      /* Team Leader Badge */
+      .badge-leader {
+          position: absolute; top: 15px; right: 15px;
+          background: #fef9c3; color: #854d0e; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+          padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px;
+          border: 1px solid #fde047; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      }
+
+      /* Profile Image */
+      .profile-img-container {
+          width: 100px; height: 100px; margin: 0 auto 15px; position: relative;
+      }
+      .profile-img {
+          width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+          border: 3px solid white; box-shadow: 0 0 0 2px var(--border-color);
+      }
+      .team-card:hover .profile-img { box-shadow: 0 0 0 2px var(--primary-color); }
+
+      .member-name { font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin-bottom: 5px; }
+      .member-role { font-size: 0.9rem; color: var(--primary-color); font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+      /* Details Table inside Card */
+      .info-grid {
+          display: grid; grid-template-columns: auto 1fr; gap: 8px 15px;
+          text-align: left; margin-bottom: 20px; font-size: 0.85rem;
+          background: #f9fafb; padding: 15px; border-radius: 10px;
+      }
+      .info-label { color: var(--text-light); font-weight: 500; }
+      .info-val { color: var(--dark-color); font-weight: 600; text-align: right; }
+
+      /* Social Actions */
+      .card-actions { display: flex; justify-content: center; gap: 10px; }
+      .icon-btn {
+          width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          background: white; border: 1px solid var(--border-color); color: var(--text-light);
+          text-decoration: none; transition: 0.2s;
+      }
+      .icon-btn:hover { background: var(--dark-color); color: white; border-color: var(--dark-color); }
+      .icon-btn.delete:hover { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-text); }
+      
+      /* Specific Brand Colors on Hover */
+      .icon-btn.linkedin:hover { background: #0077b5; border-color: #0077b5; color: white; }
+      .icon-btn.github:hover { background: #333; border-color: #333; color: white; }
+
+      /* --- MODAL STYLES --- */
+      .modal-overlay {
+          position: fixed; inset: 0; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(3px);
+          z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+      }
+      .modal-overlay.active { display: flex; opacity: 1; }
+      
+      .modal-box {
+          background: white; width: 100%; max-width: 650px; border-radius: 20px; padding: 30px;
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: translateY(20px); transition: transform 0.3s ease;
+          max-height: 90vh; overflow-y: auto;
+      }
+      .modal-overlay.active .modal-box { transform: translateY(0); }
+
+      .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+      .modal-title { font-size: 1.5rem; font-weight: 700; color: var(--dark-color); }
+      
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .full-span { grid-column: span 2; }
+      
+      .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--dark-color); }
+      .input-group input, .input-group select {
+          width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+          font-family: inherit; font-size: 0.95rem; transition: 0.2s;
+      }
+      .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(201, 154, 77, 0.1); }
+
+      .checkbox-wrapper {
+          display: flex; align-items: center; gap: 10px; padding: 15px;
+          background: #fefce8; border: 1px solid #fde047; border-radius: 8px; cursor: pointer;
+      }
+      .checkbox-wrapper input { width: 18px; height: 18px; accent-color: var(--primary-color); }
+      .checkbox-text { font-weight: 600; color: #854d0e; font-size: 0.9rem; }
+
+      /* Alert Styles */
+      .flash-container { margin-bottom: 20px; }
+      .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; animation: slideIn 0.3s ease-out; }
+      .alert-success { background: var(--success-bg); color: var(--success-text); border: 1px solid #bbf7d0; }
+      .alert-danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid #fecaca; }
+      @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <header class="top-header">
+        <div class="header-left">
+            <div class="logo"><img src="{{ url_for('static', filename='images/logo-bg.png') }}" alt="Logo"></div>
+            <nav>
+                <ul class="top-nav-list">
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_dashboard') }}" >
+                            <span class="material-symbols-outlined">dashboard</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('admin_driver_applications') }}">
+                            <span class="material-symbols-outlined">assignment_ind</span> Applications
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_drivers') }}">
+                            <span class="material-symbols-outlined">group</span> Drivers
+                        </a>
+                    </li>
+                    <li class="top-nav-item">
+                        <a href="{{ url_for('manage_users') }}">
+                            <span class="material-symbols-outlined">people</span> Customers
+                        </a>
+                    </li>
+
+                    <li class="top-nav-item">
+    <a href="{{ url_for('manage_trips') }}" class="{{ 'active' if request.endpoint == 'manage_trips' else '' }}">
+        <span class="material-symbols-outlined">alt_route</span> Trips
+    </a>
+</li>
+
+<li class="top-nav-item">
+        <a href="{{ url_for('admin_developers') }}" class="active">
+            <span class="material-symbols-outlined">engineering</span> Developers
+        </a>
+    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="header-actions">
+        <a href="{{ url_for('admin_profile') }}" style="text-decoration:none;">
+    <div class="admin-info" style="display:flex; align-items:center; gap:10px; color:#d1d5db; cursor:pointer;">
+        <div class="admin-avatar" style="width:32px; height:32px; background:var(--primary-color); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">
+            {{ session.admin_username[0] | upper }}
+        </div>
+        <span style="font-weight:500;">{{ session.admin_username }}</span>
+    </div>
+</a>
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+          <span class="material-symbols-outlined">logout</span> Logout
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+        
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Team Management</h1>
+                <p>Manage project developers, team leaders, and guides.</p>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-add btn-secondary" onclick="openModal('guideModal')">
+                    <span class="material-symbols-outlined">school</span> Add Guide
+                </button>
+                <button class="btn-add" onclick="openModal('devModal')">
+                    <span class="material-symbols-outlined">person_add</span> Add Developer
+                </button>
+            </div>
+        </div>
+
+        <div class="flash-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span style="cursor:pointer;" onclick="this.parentElement.remove()">&times;</span>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="section-label">
+            <span class="material-symbols-outlined">supervisor_account</span> Project Guides
+        </div>
+        <div class="grid-container">
+            {% for guide in guides %}
+            <div class="team-card">
+                <div class="profile-img-container">
+                    <img src="{{ guide.photo_url }}" class="profile-img" alt="Guide">
+                </div>
+                <div class="member-name">{{ guide.name }}</div>
+                <div class="member-role" style="color: var(--text-light);">{{ guide.designation }}</div>
+                
+                <div class="info-grid">
+                    <span class="info-label">Dept:</span> <span class="info-val">{{ guide.department }}</span>
+                    <span class="info-label">College:</span> <span class="info-val">{{ guide.college }}</span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="mailto:{{ guide.email }}" class="icon-btn" title="Email"><span class="material-symbols-outlined">mail</span></a>
+                    <a href="{{ url_for('delete_team_member', type='guide', id=guide.id) }}" class="icon-btn delete" onclick="return confirm('Remove this guide?')" title="Delete"><span class="material-symbols-outlined">delete</span></a>
+                </div>
+            </div>
+            {% else %}
+            <div style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 20px;">No guides added yet.</div>
+            {% endfor %}
+        </div>
+
+        <div class="section-label" style="margin-top: 50px;">
+            <span class="material-symbols-outlined">engineering</span> Development Team
+        </div>
+        <div class="grid-container">
+            {% for dev in developers %}
+            <div class="team-card" style="{{ 'border-color: #fcd34d; background: #fffbeb;' if dev.is_leader }}">
+                {% if dev.is_leader %}
+                <div class="badge-leader">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">verified</span> Team Lead
+                </div>
+                {% endif %}
+
+                <div class="profile-img-container">
+                    <img src="{{ dev.photo_url }}" class="profile-img" alt="Dev">
+                </div>
+                
+                <div class="member-name">{{ dev.name }}</div>
+                <div class="member-role">{{ dev.role }}</div>
+
+                <div class="info-grid">
+                    <span class="info-label">Reg No:</span> <span class="info-val">{{ dev.reg_no }}</span>
+                    <span class="info-label">Year:</span> <span class="info-val">{{ dev.year_study }}</span>
+                    <span class="info-label">Dept:</span> <span class="info-val">{{ dev.department }}</span>
+                    <span class="info-label full-span" style="text-align: left; margin-top: 5px; color: var(--text-light); font-weight: 400; font-size: 0.8rem;">
+                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">location_on</span> {{ dev.college }}
+                    </span>
+                </div>
+
+                <div class="card-actions">
+                    <a href="mailto:{{ dev.email }}" class="icon-btn" title="Email">
+                        <span class="material-symbols-outlined">mail</span>
+                    </a>
+                    
+                    {% if dev.linkedin %}
+                        <a href="{{ dev.linkedin }}" target="_blank" class="icon-btn linkedin" title="LinkedIn">
+                            <i class="fa-brands fa-linkedin-in" style="font-size: 1.1rem;"></i>
+                        </a> 
+                    {% endif %}
+                    
+                    {% if dev.github %}
+                        <a href="{{ dev.github }}" target="_blank" class="icon-btn github" title="GitHub">
+                            <i class="fa-brands fa-github" style="font-size: 1.1rem;"></i>
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('delete_team_member', type='dev', id=dev.id) }}" class="icon-btn delete" onclick="return confirm('Remove developer?')">
+                        <span class="material-symbols-outlined">delete</span>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 20px;">No developers added yet.</div>
+            {% endfor %}
+        </div>
+
+    </main>
+
+    <div id="devModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Team Member</h2>
+                <button onclick="closeModal('devModal')" style="background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
+            </div>
+            
+            <form action="{{ url_for('add_developer') }}" method="POST" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="input-group full-span">
+                        <label>Full Name</label>
+                        <input type="text" name="name" required placeholder="Your Full Name">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Role</label>
+                        <input type="text" name="role" required placeholder="Ex: Backend Developer">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Register Number</label>
+                        <input type="text" name="regNo" required placeholder="Ex: 992200...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Year of Study</label>
+                        <select name="year" required>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Department</label>
+                        <select name="department" required>
+                            <option value="" disabled selected>Select Department</option>
+                           <option value="CSE (Data Science)">Computer Science and Engineering (Data Science)</option>
+        <option value="CSE (AIML)">Computer Science and Engineering (AIML)</option>
+        <option value="CSE (Cyber Security)">Computer Science and Engineering (Cyber Security)</option>
+        <option value="CSE (IoT)">Computer Science and Engineering (IoT)</option>
+        
+        <option value="IT">Information Technology (IT)</option>
+        
+        <option value="ECE">Electronics and Communication Engineering</option>
+        <option value="ECE (VLSI)">Electronics and Communication Engineering (VLSI)</option>
+        <option value="ECE (Embedded IoT)">Electronics and Communication Engineering (Embedded IoT)</option>
+        <option value="ECE (MATLAB)">Electronics and Communication Engineering (MATLAB)</option>
+        
+        <option value="EEE">Electrical and Electronics Engineering</option>
+        <option value="Biotechnology">Biotechnology</option>
+        <option value="Biomedical">Biomedical</option>
+        <option value="Mechanical">Mechanical Engineering</option>
+        <option value="Civil">Civil Engineering</option>
+        <option value="Automobile">Automobile Engineering</option>
+        <option value="Chemical">Chemical Engineering</option>
+        <option value="Aeronautical">Aeronautical Engineering</option>
+        
+        <option value="Others">Others</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>College</label>
+                        <select name="college" required>
+                            <option value="Kalasalingam Academy of Research and Education">Kalasalingam Academy of Research and Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required placeholder="john@example.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label>LinkedIn URL (Optional)</label>
+                        <input type="url" name="linkedin" placeholder="https://linkedin.com/in/...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>GitHub URL (Optional)</label>
+                        <input type="url" name="github" placeholder="https://github.com/...">
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>Profile Photo</label>
+                        <input type="file" name="photo" accept="image/*">
+                    </div>
+
+                    <div class="full-span">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="isLeader">
+                            <span class="checkbox-text">Mark as Team Leader</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-add" style="width: 100%; justify-content: center; margin-top: 20px; padding: 12px;">Add Developer</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="guideModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Project Guide</h2>
+                <button onclick="closeModal('guideModal')" style="background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
+            </div>
+            
+            <form action="{{ url_for('add_guide') }}" method="POST" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="input-group full-span">
+                        <label>Guide Name</label>
+                        <input type="text" name="name" required placeholder="Ex: Dr. Smith">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Designation</label>
+                        <input type="text" name="designation" required placeholder="Ex: Associate Professor">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Department</label>
+                        <input type="text" name="department" required placeholder="Ex: CSE">
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>College</label>
+                        <select name="college" required>
+                            <option value="Kalasalingam Academy of Research and Education">Kalasalingam Academy of Research and Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>Email Address</label>
+                        <input type="email" name="email" required>
+                    </div>
+
+                    <div class="input-group full-span">
+                        <label>Photo</label>
+                        <input type="file" name="photo" accept="image/*">
+                    </div>
+                </div>
+                <button type="submit" class="btn-add" style="width: 100%; justify-content: center; margin-top: 20px; padding: 12px;">Add Guide</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        }
+
+        // --- NEW: AUTO-DISMISS ALERTS (3 Seconds) ---
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                // Add a transition for smooth fading
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0"; // Fade out
+                
+                // Wait for the fade to finish (500ms), then remove from DOM
+                setTimeout(() => alert.remove(), 500); 
+            });
+        }, 3000); // Wait 3000ms (3 seconds) before starting
+    });
+    </script>
+</body>
+</html>

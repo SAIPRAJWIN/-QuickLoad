@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | QuickLoad</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; /* Fallback */
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; /* Prevent scrollbars from canvas */
+            position: relative;
+        }
+
+        /* --- CANVAS BACKGROUND --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; /* Behind everything */
+            background: radial-gradient(circle at center, #fff1f2, #f1f5f9); /* Soft Pink to Grey Gradient */
+        }
+
+        .auth-container {
+            display: flex;
+            width: 100%; max-width: 900px;
+            background: rgba(255, 255, 255, 0.85); /* Glass Effect */
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); 
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            position: relative;
+            z-index: 10; /* Above canvas */
+        }
+
+        /* Left Side - Form */
+        .auth-form-side { padding: 3rem; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        
+        .brand { margin-bottom: 2rem; }
+        .brand img { height: 60px; }
+
+        .title-group { margin-bottom: 2rem; }
+        .title-group h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; }
+        .title-group p { color: var(--text-sub); }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; }
+        .input-box { position: relative; }
+        .input-box input {
+            width: 100%; padding: 12px 16px 12px 42px;
+            border: 1px solid var(--border); border-radius: 12px;
+            font-size: 1rem; transition: 0.2s; outline: none;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .input-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); background: white; }
+        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); font-size: 20px; }
+
+        .actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .forgot-link { color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
+        .forgot-link:hover { text-decoration: underline; }
+
+        .btn-primary {
+            width: 100%; padding: 14px; background: var(--text-main); color: white;
+            border: none; border-radius: 12px; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-primary:hover { background: black; transform: translateY(-1px); }
+
+        .register-text { margin-top: 2rem; text-align: center; font-size: 0.9rem; color: var(--text-sub); }
+        .register-text a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+        /* Right Side - Visual */
+        .auth-visual-side {
+            flex: 1; background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white; padding: 3rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background-image: url('{{ url_for("static", filename="images/login-bg.png") }}');
+            background-size: cover; background-blend-mode: overlay;
+        }
+        .visual-content h2 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+        .visual-content p { opacity: 0.8; font-size: 1.1rem; line-height: 1.6; }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px); z-index: 999;
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+
+        .modal-card {
+            background: white; width: 100%; max-width: 420px;
+            border-radius: 20px; padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-card { transform: scale(1); }
+
+        .modal-step { display: none; animation: fadeIn 0.3s ease; }
+        .modal-step.active { display: block; }
+        
+        .step-icon {
+            width: 60px; height: 60px; background: #fee2e2; color: var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; font-size: 32px;
+        }
+        .step-title { text-align: center; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-main); }
+        .step-desc { text-align: center; color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+        .error-msg { color: var(--primary); font-size: 0.85rem; margin-top: 5px; min-height: 1.2em; text-align: center; }
+
+        @media (max-width: 900px) { .auth-container { flex-direction: column; max-width: 500px; } .auth-visual-side { display: none; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Animation for Flash Messages */
+.flash-message {
+    transition: opacity 0.5s ease-out;
+}
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="auth-container">
+        <div class="auth-form-side">
+            <div class="brand">
+                <a href="{{ url_for('home') }}">
+                    <img src="{{ url_for('static', filename='images/VaahanSetu-Copy.png') }}" alt="QuickLoad">
+                </a>
+            </div>
+            
+            <div class="title-group">
+                <h1>Welcome Back</h1>
+                <p>Please enter your details to sign in.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message" style="padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; 
+            background: {{ '#dcfce7' if category == 'success' else '#fee2e2' }}; 
+            color: {{ '#166534' if category == 'success' else '#991b1b' }};">
+    {{ message }}
+</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">mail</span>
+                        <input type="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <span class="forgot-link" onclick="openForgotModal()">Forgot Password?</span>
+                </div>
+
+                <button type="submit" class="btn-primary">Sign in</button>
+            </form>
+
+            <div class="register-text">
+                Don't have an account? <a href="{{ url_for('register') }}">Sign up now</a>
+            </div>
+        </div>
+
+        <div class="auth-visual-side">
+    <div class="visual-content">
+        <h2>Seamless Logistics for Everyone.</h2>
+        <p>Book vehicles instantly, track shipments in real-time, and experience the future of transport.</p>
+    </div>
+    
+    <div style="font-size: 0.8rem; opacity: 0.6;">
+        <div>&copy; {{ now.year if now else 2026 }} QuickLoad. All rights reserved.</div>
+        <div style="margin-top: 4px; font-weight: 500;">Developed by Team Unique</div>
+    </div>
+</div>
+    </div>
+
+    <div id="forgotModal" class="modal-overlay">
+        <div class="modal-card">
+            <button onclick="closeForgotModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer;">
+                <span class="material-symbols-rounded" style="color: var(--text-sub);">close</span>
+            </button>
+
+            <div id="step1" class="modal-step active">
+                <div class="step-icon"><span class="material-symbols-rounded">lock_reset</span></div>
+                <div class="step-title">Reset Password</div>
+                <div class="step-desc">Enter your registered email address to receive a verification code.</div>
+                
+                <div class="form-group">
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">mail</span>
+                        <input type="email" id="resetEmail" placeholder="e.g. user@example.com">
+                    </div>
+                    <div class="error-msg" id="err1"></div>
+                </div>
+                <button class="btn-primary" onclick="sendResetOTP(this)">Send Verification Code</button>
+            </div>
+
+            <div id="step2" class="modal-step">
+                <div class="step-icon"><span class="material-symbols-rounded">security</span></div>
+                <div class="step-title">Enter Code</div>
+                <div class="step-desc">We sent a 6-digit code to your email. Enter it below.</div>
+                
+                <div class="form-group">
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">key</span>
+                        <input type="text" id="resetOTP" placeholder="000000" maxlength="6" style="letter-spacing: 4px; text-align: center;">
+                    </div>
+                    <div class="error-msg" id="err2"></div>
+                </div>
+                <button class="btn-primary" onclick="verifyResetOTP(this)">Verify Code</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <span class="forgot-link" onclick="showStep(1)" style="font-size: 0.9rem;">Wrong email? Go back</span>
+                </div>
+            </div>
+
+            <div id="step3" class="modal-step">
+                <div class="step-icon"><span class="material-symbols-rounded">check_circle</span></div>
+                <div class="step-title">New Password</div>
+                <div class="step-desc">Secure your account with a strong new password.</div>
+                
+                <div class="form-group">
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" id="newPass" placeholder="New Password (Min 8 chars)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-box">
+                        <span class="material-symbols-rounded input-icon">lock_person</span>
+                        <input type="password" id="confirmPass" placeholder="Confirm Password">
+                    </div>
+                    <div class="error-msg" id="err3"></div>
+                </div>
+                <button class="btn-primary" onclick="commitPasswordReset(this)">Reset Password</button>
+            </div>
+
+            <div id="step4" class="modal-step" style="text-align: center;">
+                <div class="step-icon" style="background: #dcfce7; color: #166534;"><span class="material-symbols-rounded">check</span></div>
+                <div class="step-title">All Set!</div>
+                <div class="step-desc">Your password has been successfully reset. You can now log in with your new credentials.</div>
+                <button class="btn-primary" onclick="closeForgotModal()">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. PARTICLE NETWORK ANIMATION ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const particleCount = 60; // Adjust for density
+        const connectionDistance = 150; // Distance to connect lines
+
+        // Colors (Matching Brand Red/Pink/Grey)
+        // We use RGBA for opacity manipulation
+        const particleColor = 'rgba(220, 38, 38, 0.4)'; // Red-600
+        const lineColor = '220, 38, 38'; // Red RGB for dynamic opacity
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.5; // Random speed X
+                this.vy = (Math.random() - 0.5) * 1.5; // Random speed Y
+                this.size = Math.random() * 2 + 1; // Random size
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = particleColor;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw Connecting Lines
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        // Opacity decreases as distance increases
+                        const opacity = 1 - (distance / connectionDistance);
+                        ctx.strokeStyle = `rgba(${lineColor}, ${opacity * 0.2})`; // Low opacity lines
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Resize handling
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        initParticles();
+        animateParticles();
+
+
+        // --- 2. MODAL LOGIC (Existing) ---
+        let globalEmail = "";
+
+        function openForgotModal() {
+            document.getElementById('forgotModal').classList.add('active');
+            showStep(1);
+            document.getElementById('resetEmail').value = "";
+            document.getElementById('resetOTP').value = "";
+            document.getElementById('newPass').value = "";
+            document.getElementById('confirmPass').value = "";
+            document.querySelectorAll('.error-msg').forEach(e => e.innerText = "");
+        }
+
+        function closeForgotModal() {
+            document.getElementById('forgotModal').classList.remove('active');
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.modal-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+        }
+
+        function showError(step, msg) {
+            document.getElementById(`err${step}`).innerText = msg;
+        }
+
+        // --- API Logic ---
+        function sendResetOTP(btn) {
+            const email = document.getElementById('resetEmail').value.trim();
+            if(!email) return showError(1, "Please enter your email.");
+            const oldText = btn.innerText;
+            btn.disabled = true; btn.innerText = "Sending..."; showError(1, "");
+
+            fetch('/forgot-password/request-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email: email })
+            }).then(res => res.json()).then(data => {
+                if(data.success) { globalEmail = email; showStep(2); } 
+                else { showError(1, data.message); }
+            }).catch(() => showError(1, "Network error."))
+              .finally(() => { btn.disabled = false; btn.innerText = oldText; });
+        }
+
+        function verifyResetOTP(btn) {
+            const otp = document.getElementById('resetOTP').value.trim();
+            if(otp.length !== 6) return showError(2, "Invalid code.");
+            const oldText = btn.innerText;
+            btn.disabled = true; btn.innerText = "Verifying..."; showError(2, "");
+
+            fetch('/forgot-password/verify-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email: globalEmail, otp: otp })
+            }).then(res => res.json()).then(data => {
+                if(data.success) { showStep(3); } 
+                else { showError(2, data.message); }
+            }).catch(() => showError(2, "Network error."))
+              .finally(() => { btn.disabled = false; btn.innerText = oldText; });
+        }
+
+        function commitPasswordReset(btn) {
+            const p1 = document.getElementById('newPass').value;
+            const p2 = document.getElementById('confirmPass').value;
+            if(p1.length < 8) return showError(3, "Min 8 chars required.");
+            if(p1 !== p2) return showError(3, "Passwords mismatch.");
+            const oldText = btn.innerText;
+            btn.disabled = true; btn.innerText = "Resetting..."; showError(3, "");
+
+            fetch('/forgot-password/reset', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email: globalEmail, password: p1 })
+            }).then(res => res.json()).then(data => {
+                if(data.success) { showStep(4); } 
+                else { showError(3, data.message); }
+            }).catch(() => showError(3, "Network error."))
+              .finally(() => { btn.disabled = false; btn.innerText = oldText; });
+        }
+
+        // --- AUTO-DISMISS ALERT MESSAGES (3 SECONDS) ---
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.flash-message'); 
+        alerts.forEach(alert => {
+            alert.style.opacity = "0"; // Fade out
+            setTimeout(() => alert.remove(), 500); // Remove from DOM after fade
+        });
+    }, 3000); // 3000ms = 3 Seconds
+});
+    </script>
+</body>
+</html>

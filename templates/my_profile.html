@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile - Driver Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+    <style>
+      :root {
+        --primary-color: #5ca7a8;
+        --dark-color: #1f2937;
+        --sidebar-bg: #111827;
+        --main-bg: #f9fafb;
+        --text-color: #374151;
+        --text-light: #6b7280;
+        --border-color: #e5e7eb;
+        --success-bg: #dcfce7;
+        --success-text: #166534;
+        --warning-bg: #fffbe7;
+        --warning-text: #92400e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--main-bg);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      /* --- Sidebar Navigation (Same as Dashboard) --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--sidebar-bg);
+        color: #d1d5db;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .sidebar-logo img {
+        height: 50px;
+      }
+      .sidebar-nav {
+        flex-grow: 1;
+        padding: 20px 10px;
+        overflow-y: auto;
+      }
+      .nav-list {
+        list-style: none;
+      }
+      .nav-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-light);
+        padding: 0 15px;
+        margin: 15px 0 10px 0;
+      }
+      .nav-item a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        color: #d1d5db;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 5px;
+      }
+      .nav-item a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+      .nav-item a.active {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      /* --- Main Content Area --- */
+      .main-content {
+        margin-left: 260px;
+        width: calc(100% - 260px);
+        padding: 25px;
+        transition: all 0.3s ease;
+      }
+
+      /* --- Main Header --- */
+      .main-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .hamburger {
+        display: none;
+        cursor: pointer;
+        font-size: 28px;
+      }
+      .page-title h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+      .header-actions {
+        display: flex;
+        gap: 1rem;
+      }
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        background-color: #fff;
+      }
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+      .action-btn:hover {
+        opacity: 0.8;
+        transform: translateY(-2px);
+      }
+      .action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* --- Profile Layout --- */
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 25px;
+      }
+
+      .profile-card,
+      .details-card {
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      }
+
+      /* --- Left Profile Card --- */
+      .profile-card {
+        text-align: center;
+      }
+      
+      /* 💡 Profile Picture Container Styles */
+      .profile-picture-container {
+        position: relative;
+        display: block;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px auto;
+        border-radius: 50%;
+        cursor: default; /* Default cursor for read-only mode */
+      }
+      
+      .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 0;
+        background-size: cover;
+        background-position: center;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: filter 0.3s ease;
+      }
+      .profile-picture img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      /* NEW: Hide overlay by default and show button instead.
+        The overlay's click listener logic is fully removed from JS. 
+      */
+      .photo-edit-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0; 
+        transition: opacity 0.3s ease;
+        pointer-events: none; /* Prevents overlay from blocking click */
+      }
+      /* Remove all overlay-related hover/editable rules to prioritize the button */
+      .details-form.editable .profile-picture-container:hover .photo-edit-overlay,
+      .details-form.editable .profile-picture-container:hover .profile-picture,
+      .details-form.editable .profile-picture-container {
+          cursor: default; /* Reset cursor */
+          filter: none; /* Reset filter */
+          opacity: 0; /* Ensure overlay remains hidden */
+      }
+      
+      /* NEW CSS: Style for the separate button */
+      .change-photo-btn {
+        display: none; /* Hidden by default */
+        margin: 10px auto 20px auto;
+        background-color: #fff;
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+      }
+
+      .details-form.editable .change-photo-btn {
+        display: inline-flex; /* Show button in edit mode */
+      }
+
+      .photo-edit-overlay .material-symbols-outlined {
+          font-size: 32px;
+      }
+      #overlayText {
+          font-size: 0.8rem;
+          font-weight: 500;
+          margin-top: 5px;
+      }
+
+      .profile-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark-color);
+      }
+      .profile-appid {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-bottom: 15px;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.85rem;
+      }
+      .status-badge.verified {
+        background-color: var(--success-bg);
+        color: var(--success-text);
+      }
+      .status-badge.pending {
+        background-color: var(--warning-bg);
+        color: var(--warning-text);
+      }
+      .divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 25px 0;
+      }
+      .profile-section-title {
+        text-align: left;
+        font-weight: 600;
+        margin-bottom: 15px;
+      }
+      .vehicle-summary {
+        text-align: left;
+        font-size: 0.9rem;
+      }
+      .vehicle-summary p {
+        margin-bottom: 5px;
+      }
+      .vehicle-summary strong {
+        color: var(--text-light);
+        min-width: 80px;
+        display: inline-block;
+      }
+
+      /* --- Right Details Card --- */
+      .tabs-nav {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 25px;
+      }
+      .tab-btn {
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-light);
+        position: relative;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -1px;
+      }
+      .tab-btn.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom-color: var(--primary-color);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .details-form .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-label {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 5px;
+      }
+      .form-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        background-color: var(--main-bg);
+      }
+      .form-input[readonly] {
+        background-color: #f0f4f8; /* Uneditable fields look distinct */
+        color: var(--text-color);
+        cursor: default;
+      }
+      /* Style for editable mode */
+      .details-form.editable .form-input {
+        background-color: #fff;
+        border: 1px solid var(--primary-color);
+      }
+
+      .document-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background-color: var(--main-bg);
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-color);
+        transition: background-color 0.2s ease;
+      }
+      .document-link:hover {
+        background-color: #e0e7ff;
+      }
+      .document-link .material-symbols-outlined {
+        color: var(--primary-color);
+      }
+      
+      /* New styles for document/file upload management */
+      .document-group {
+        display: grid;
+        grid-template-columns: 1fr 120px; /* Link/Info on left, Update button on right */
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .document-group .update-file-btn {
+        display: none; /* Hidden by default */
+        position: relative;
+        overflow: hidden;
+        background-color: #f0f4f8;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        font-size: 0.85rem;
+      }
+      .document-group .update-file-btn:hover {
+        background-color: #e5e7eb;
+      }
+      .document-group .update-file-btn input[type="file"] {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-width: 100%;
+        min-height: 100%;
+        font-size: 100px;
+        text-align: right;
+        filter: alpha(opacity=0);
+        opacity: 0;
+        outline: none;
+        cursor: inherit;
+        display: block;
+      }
+      .details-form.editable .document-group .update-file-btn {
+        display: block; /* Show button in edit mode */
+      }
+      .file-name-display {
+        font-size: 0.75rem;
+        color: var(--primary-color);
+        margin-top: 5px;
+        text-align: center;
+      }
+
+      /* --- Notification/Flash Message --- */
+      .flash-message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        text-align: center;
+      }
+      .flash-success {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+      .flash-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      /* --- Responsive Design --- */
+      @media (max-width: 992px) {
+        .sidebar {
+          transform: translateX(-100%);
+          z-index: 1001;
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+        }
+        .hamburger {
+          display: block;
+        }
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+        .document-group {
+          grid-template-columns: 1fr 100px;
+        }
+      }
+      @media (max-width: 576px) {
+        .main-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .details-form .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* --- Flash Message Notification Styles --- */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 9999;
+}
+
+.alert {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+    background: white;
+}
+
+.alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.alert-danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.alert-warning { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+
+.close-btn { cursor: pointer; margin-left: 15px; font-size: 1.2rem; opacity: 0.6; }
+.close-btn:hover { opacity: 1; }
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+    /* Red Logout Button Styles */
+      .nav-item a.logout-btn {
+        background-color: transparent; /* Transparent by default */
+        color: #dc2626 !important; /* Red Text */ 
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+      
+      /* Hover State: Light Red Background */
+      .nav-item a.logout-btn:hover {
+        background-color: #fef2f2; /* Very Light Red */
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+      }
+
+      /* --- MODERN MODAL STYLES --- */
+.pwd-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+    z-index: 3000;
+    display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
+}
+.pwd-modal-overlay.active { display: flex; opacity: 1; }
+
+.pwd-modal-card {
+    background: #ffffff; width: 90%; max-width: 420px;
+    border-radius: 24px; padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pwd-modal-overlay.active .pwd-modal-card { transform: translateY(0); }
+
+.pwd-modal-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; position: relative; }
+.pwd-icon-box {
+    width: 48px; height: 48px; background: #e0e7ff; color: #4338ca;
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+}
+.pwd-modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0; }
+.pwd-modal-header p { font-size: 0.85rem; color: #6b7280; margin: 2px 0 0 0; }
+.pwd-close-btn {
+    position: absolute; top: -10px; right: -10px; background: none; border: none;
+    font-size: 2rem; color: #9ca3af; cursor: pointer; transition: 0.2s;
+}
+.pwd-close-btn:hover { color: #ef4444; }
+
+.pwd-group { margin-bottom: 20px; }
+.pwd-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+
+.pwd-input-wrapper { position: relative; display: flex; align-items: center; }
+.pwd-input-wrapper input {
+    width: 100%; padding: 12px 40px; /* Space for icons */
+    border: 1px solid #e5e7eb; border-radius: 12px;
+    font-size: 0.95rem; transition: all 0.2s;
+}
+.pwd-input-wrapper input:focus { border-color: #4338ca; box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.1); outline: none; }
+.pwd-field-icon { position: absolute; left: 12px; color: #9ca3af; font-size: 20px; }
+.pwd-toggle { position: absolute; right: 12px; color: #9ca3af; cursor: pointer; font-size: 20px; }
+.pwd-toggle:hover { color: #4338ca; }
+
+/* Strength Meter */
+.strength-meter { height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.strength-bar { height: 100%; width: 0; transition: width 0.3s, background 0.3s; }
+.strength-text { font-size: 0.75rem; margin-top: 4px; color: #6b7280; font-weight: 500; text-align: right; }
+
+.validation-msg { font-size: 0.8rem; margin-top: 5px; min-height: 18px; }
+
+.pwd-actions { display: flex; gap: 10px; margin-top: 30px; }
+.pwd-btn-cancel { flex: 1; padding: 12px; background: #f3f4f6; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.pwd-btn-save { flex: 2; padding: 12px; background: #1f2937; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.pwd-btn-save:hover { background: #000; transform: translateY(-1px); }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="sidebar-logo">
+          <img
+            src="{{ url_for('static', filename='images/logo-bg.png') }}"
+            alt="QuickLoad Logo"
+          />
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-title">Menu</li>
+          <li class="nav-item">
+            <a href="{{ url_for('driver_dashboard') }}">
+              <span class="material-symbols-outlined">dashboard</span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('trip_requests') }}">
+              <span class="material-symbols-outlined"
+                >notifications_active</span
+              >
+              <span>Trip Requests</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_trips') }}">
+              <span class="material-symbols-outlined">alt_route</span>
+              <span>My Trips</span>
+            </a>
+          </li>
+          <li class="nav-title">Manage</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_vehicles') }}">
+              <span class="material-symbols-outlined">local_shipping</span>
+              <span>My Vehicles</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_earnings') }}">
+              <span class="material-symbols-outlined">payments</span>
+              <span>Earnings</span>
+            </a>
+          </li>
+          <li class="nav-title">Account</li>
+          <li class="nav-item">
+            <a href="{{ url_for('my_profile') }}" class="active">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span>My Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('support') }}">
+              <span class="material-symbols-outlined">help</span>
+              <span>Support</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/driver_logout" class="logout-btn">
+              <span class="material-symbols-outlined">logout</span><span>Logout</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <header class="main-header">
+        <div class="header-left">
+          <span class="material-symbols-outlined hamburger" id="hamburgerBtn"
+            >menu</span
+          >
+          <div class="page-title">
+            <h1>My Profile</h1>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" onclick="openPwdModal()">
+    <span class="material-symbols-outlined">lock</span> Change Password
+</button>
+          <button class="action-btn btn-primary" id="editProfileBtn">
+            <span class="material-symbols-outlined">edit</span>
+            <span>Edit Profile</span>
+          </button>
+        </div>
+      </header>
+
+
+      <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <span>{{ message }}</span>
+                    <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+     
+
+      <div class="profile-grid">
+        <div class="profile-card">
+          <!-- Hidden form to contain the file input, keeping it separate from the main profile form -->
+          <form id="hiddenPhotoForm" enctype="multipart/form-data" style="display:none;">
+            <input type="file" id="profilePhotoFile" name="profilePhotoFile"
+                   accept=".png, .jpg, .jpeg" data-file-display="photo-name"/>
+          </form>
+
+          <!-- IMPORTANT: Removed the <label> tag and set the container ID to the <div> below -->
+          <!-- The container holds the photo and is clicked to open the file input in JS -->
+          <div class="profile-picture-container" id="profilePictureContainer">
+              <div class="profile-picture" id="profilePictureDisplay">
+                  <img src="{{ profile.profile_photo_url }}?t={{ profile.last_update_timestamp }}" 
+                       alt="Profile Picture" 
+                       onerror="this.src='{{ url_for('static', filename='images/default_profile.png') }}'"/>
+              </div>
+              <!-- Removed the overlay to avoid conflict, focusing on the button below -->
+          </div>
+          
+          <!-- NEW: Change Photo button placed below the photo -->
+          <button type="button" class="action-btn change-photo-btn" id="changeProfilePhotoBtn">
+              <span class="material-symbols-outlined">camera_alt</span>
+              <span>Change Photo</span>
+          </button>
+          
+          <div id="photo-name" class="file-name-display"></div>
+
+
+          <h2 class="profile-name">{{ profile.full_name }}</h2>
+          <p class="profile-appid">ID: {{ profile.application_id }}</p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
+    <div style="background: #fffbeb; border: 1px solid #fcd34d; padding: 5px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px;">
+        <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 20px; font-variation-settings: 'FILL' 1;">star</span>
+        <strong style="color: #92400e; font-size: 1.1rem;">{{ profile.overall_rating }}</strong>
+    </div>
+    <span style="color: var(--text-light); font-size: 0.85rem;">({{ profile.review_count }} Reviews)</span>
+</div>
+          <div class="status-badge verified">
+            <span class="material-symbols-outlined">verified</span>
+            <span>Verified Driver</span>
+          </div>
+          <div class="divider"></div>
+          
+          {% if vehicle %}
+          <h3 class="profile-section-title">Primary Vehicle</h3>
+          <div class="vehicle-summary">
+            <p><strong>Type:</strong> <span>{{ vehicle.vehicle_type }}</span></p>
+            <p><strong>Model:</strong> <span>{{ vehicle.vehicle_model }}</span></p>
+            <p><strong>Reg. No:</strong> <span>{{ vehicle.vehicle_reg_no }}</span></p>
+          </div>
+          {% else %}
+          <h3 class="profile-section-title" style="color: var(--warning-text);">No Verified Vehicle</h3>
+          <p style="font-size: 0.9rem; color: var(--text-light);">Please add a vehicle on the <a href="{{ url_for('my_vehicles') }}" style="color: var(--primary-color); text-decoration: none;">My Vehicles</a> page.</p>
+          {% endif %}
+        </div>
+
+        <div class="details-card">
+          <div class="tabs-nav">
+            <button class="tab-btn active" data-tab="personal">
+              Personal Details
+            </button>
+            <button class="tab-btn" data-tab="documents">License & Docs</button>
+            <button class="tab-btn" data-tab="bank">Bank Details</button>
+          </div>
+
+          <form id="profileForm" class="details-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
+            
+            <div id="personal" class="tab-content active">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="fullName">Full Name</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    value="{{ profile.full_name }}"
+                    required
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dob">Date of Birth</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="dob"
+                    name="dob"
+                    value="{{ profile.dob }}"
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="contactNumber"
+                    >Contact Number</label
+                  >
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="contactNumber"
+                    name="contactNumber"
+                    value="{{ profile.contact_number }}"
+                    required
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="email">Email Address</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="email"
+                    name="email"
+                    value="{{ profile.email }}"
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="city">City</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="city"
+                    name="city"
+                    value="{{ profile.city }}"
+                    required
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pincode">Pincode</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="pincode"
+                    name="pincode"
+                    value="{{ profile.pincode }}"
+                    required
+                    readonly
+                  />
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1">
+                  <label class="form-label" for="address">Address</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="address"
+                    name="address"
+                    value="{{ profile.address }}"
+                    required
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div id="documents" class="tab-content">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Driving License No.</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="licenseNumber"
+                    name="licenseNumber"
+                    value="{{ profile.license_number }}"
+                    required
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="licenseExpiryDate">License Expiry (YYYY-MM-DD)</label>
+                  <input
+                    class="form-input"
+                    type="date"
+                    id="licenseExpiryDate"
+                    name="licenseExpiryDate"
+                    value="{{ profile.license_expiry_date }}"
+                    readonly
+                  />
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">Uploaded Documents: License</label>
+                  <div class="document-group">
+                    {% if profile.driving_license_url %}
+                    <a href="{{ profile.driving_license_url }}" target="_blank" class="document-link"
+                      ><span class="material-symbols-outlined">badge</span>
+                      Driving License (View)</a
+                    >
+                    {% else %}
+                    <span class="document-link" style="justify-content: center; opacity: 0.6;">No Document Uploaded</span>
+                    {% endif %}
+                    
+                    <label class="update-file-btn" for="drivingLicenseFile">
+                      Update File
+                      <input type="file" id="drivingLicenseFile" name="drivingLicenseFile" accept=".pdf, .png, .jpg, .jpeg" data-file-display="dl-name"/>
+                    </label>
+                  </div>
+                  <div id="dl-name" class="file-name-display"></div>
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">Uploaded Documents: Aadhaar</label>
+                  <div class="document-group">
+                    {% if profile.aadhaar_url %}
+                    <a href="{{ profile.aadhaar_url }}" target="_blank" class="document-link"
+                      ><span class="material-symbols-outlined">credit_card</span>
+                      Aadhaar Card (View)</a
+                    >
+                    {% else %}
+                    <span class="document-link" style="justify-content: center; opacity: 0.6;">No Document Uploaded</span>
+                    {% endif %}
+
+                    <label class="update-file-btn" for="aadhaarFile">
+                      Update File
+                      <input type="file" id="aadhaarFile" name="aadhaarFile" accept=".pdf, .png, .jpg, .jpeg" data-file-display="aadhaar-name"/>
+                    </label>
+                  </div>
+                  <div id="aadhaar-name" class="file-name-display"></div>
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label class="form-label">Uploaded Documents: PAN</label>
+                  <div class="document-group">
+                    {% if profile.pan_url %}
+                    <a href="{{ profile.pan_url }}" target="_blank" class="document-link"
+                      ><span class="material-symbols-outlined">credit_card</span>
+                      PAN Card (View)</a
+                    >
+                    {% else %}
+                    <span class="document-link" style="justify-content: center; opacity: 0.6;">No Document Uploaded</span>
+                    {% endif %}
+
+                    <label class="update-file-btn" for="panFile">
+                      Update File
+                      <input type="file" id="panFile" name="panFile" accept=".pdf, .png, .jpg, .jpeg" data-file-display="pan-name"/>
+                    </label>
+                  </div>
+                  <div id="pan-name" class="file-name-display"></div>
+                </div>
+                
+              </div>
+            </div>
+
+            <div id="bank" class="tab-content">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="bankName">Bank Name</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="bankName"
+                    name="bankName"
+                    value="{{ profile.bank_name }}"
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="accHolderName">Account Holder Name</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="accHolderName"
+                    name="accHolderName"
+                    value="{{ profile.acc_holder_name }}"
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="accNumber">Account Number</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="accNumber"
+                    name="accNumber"
+                    value="{{ profile.acc_number }}"
+                    readonly
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="ifscCode">IFSC Code</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="ifscCode"
+                    name="ifscCode"
+                    value="{{ profile.ifsc_code }}"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <div id="passwordModal" class="pwd-modal-overlay">
+    <div class="pwd-modal-card">
+        <div class="pwd-modal-header">
+            <div class="pwd-icon-box">
+                <span class="material-symbols-outlined">lock_reset</span>
+            </div>
+            <div>
+                <h2>Update Password</h2>
+                <p>Ensure your account stays secure.</p>
+            </div>
+            <button class="pwd-close-btn" onclick="closePwdModal()">&times;</button>
+        </div>
+
+        <form id="changePasswordForm">
+            <div class="pwd-group">
+                <label>Current Password</label>
+                <div class="pwd-input-wrapper">
+                    <span class="material-symbols-outlined pwd-field-icon">key</span>
+                    <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password" required>
+                </div>
+            </div>
+
+            <div class="pwd-group">
+                <label>New Password</label>
+                <div class="pwd-input-wrapper">
+                    <span class="material-symbols-outlined pwd-field-icon">lock</span>
+                    <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" required onkeyup="checkStrength()">
+                    <span class="material-symbols-outlined pwd-toggle" onclick="toggleVisibility('newPassword', this)">visibility_off</span>
+                </div>
+                <div class="strength-meter">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="strength-text" id="strengthText">Password Strength</div>
+            </div>
+
+            <div class="pwd-group">
+                <label>Confirm New Password</label>
+                <div class="pwd-input-wrapper">
+                    <span class="material-symbols-outlined pwd-field-icon">check_circle</span>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" required onkeyup="checkMatch()">
+                    <span class="material-symbols-outlined pwd-toggle" onclick="toggleVisibility('confirmPassword', this)">visibility_off</span>
+                </div>
+                <div id="matchMessage" class="validation-msg"></div>
+            </div>
+
+            <div class="pwd-actions">
+                <button type="button" class="pwd-btn-cancel" onclick="closePwdModal()">Cancel</button>
+                <button type="submit" class="pwd-btn-save" id="savePwdBtn">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="pwdSuccessModal" class="pwd-modal-overlay">
+    <div class="pwd-modal-card" style="text-align: center; max-width: 380px;">
+        <div style="margin-bottom: 1.5rem;">
+            <div style="width: 70px; height: 70px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 4px solid #f0fdf4;">
+                <span class="material-symbols-outlined" style="font-size: 40px; color: #10b981; animation: scaleUp 0.5s ease;">check_circle</span>
+            </div>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Success!</h2>
+        <p style="color: #6b7280; margin-bottom: 2rem; font-size: 0.95rem;">
+            Your password has been updated successfully.
+        </p>
+        <button onclick="closeSuccessModal()" class="pwd-btn-save" style="width: 100%;">
+            Continue
+        </button>
+    </div>
+</div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Setup Elements ---
+        const sidebar = document.getElementById("sidebar");
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const tabContainer = document.querySelector(".tabs-nav");
+        const tabButtons = document.querySelectorAll(".tab-btn");
+        const tabContents = document.querySelectorAll(".tab-content");
+        const editProfileBtn = document.getElementById("editProfileBtn");
+        const profileForm = document.getElementById("profileForm");
+        const formInputs = profileForm.querySelectorAll(".form-input");
+        const changePasswordBtn = document.getElementById("changePasswordBtn");
+        
+        // Custom elements for photo click control
+        const profilePictureContainer = document.getElementById('profilePictureContainer');
+        const profilePhotoFile = document.getElementById('profilePhotoFile');
+        const changeProfilePhotoBtn = document.getElementById('changeProfilePhotoBtn'); // NEW BUTTON
+        
+        // Fields that are allowed to be edited - UPDATED to include ALL fields except 'email' and 'dob'
+        const editableFields = [
+          "fullName", 
+          "contactNumber", 
+          "address", 
+          "city", 
+          "pincode", 
+          "licenseNumber",
+          "licenseExpiryDate", // Used for the input in HTML
+          "bankName",
+          "accHolderName",
+          "accNumber",
+          "ifscCode"
+        ];
+        
+        // Read-only fields set in HTML: dob, email. 
+        document.getElementById("dob").setAttribute("readonly", true);
+        document.getElementById("email").setAttribute("readonly", true);
+
+        // File Inputs for easy access
+        const fileInputs = [
+            document.getElementById('drivingLicenseFile'),
+            document.getElementById('aadhaarFile'),
+            document.getElementById('panFile'),
+            profilePhotoFile // Use the direct element reference
+        ];
+
+
+        // --- New: Control Photo Click based on Edit Mode ---
+        // This is now handled by the dedicated button (changeProfilePhotoBtn)
+        /*
+        if (profilePictureContainer && profilePhotoFile) {
+            profilePictureContainer.addEventListener('click', () => {
+                if (profileForm.classList.contains('editable')) {
+                    profilePhotoFile.click();
+                }
+            });
+        }
+        */
+        // --- End Photo Click Control ---
+        
+        // --- New: Button Click Listener ---
+        if (changeProfilePhotoBtn && profilePhotoFile) {
+             changeProfilePhotoBtn.addEventListener('click', () => {
+                profilePhotoFile.click();
+            });
+        }
+        // --- End Button Click Listener ---
+
+
+        // --- File Input Change Listener for Display and Preview ---
+        fileInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('change', function() {
+                    const displayId = this.dataset.fileDisplay;
+                    const displayElement = document.getElementById(displayId);
+                    const file = this.files[0];
+
+                    if (displayElement) {
+                        if (file) {
+                            displayElement.textContent = 'Selected: ' + file.name;
+                            
+                            // Special handling for Profile Photo preview
+                            if (this.id === 'profilePhotoFile') {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    document.querySelector('.profile-picture img').src = e.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                            }
+
+                        } else {
+                            displayElement.textContent = '';
+                        }
+                    }
+                });
+            }
+        });
+
+
+        // --- Sidebar Toggle ---
+        if (hamburgerBtn && sidebar) {
+          hamburgerBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+          });
+        }
+
+        // --- Profile Tabs functionality ---
+        if (tabContainer) {
+          tabContainer.addEventListener("click", (e) => {
+            const clicked = e.target.closest(".tab-btn");
+            if (!clicked) return;
+
+            tabButtons.forEach((btn) => btn.classList.remove("active"));
+            tabContents.forEach((content) =>
+              content.classList.remove("active")
+            );
+
+            clicked.classList.add("active");
+            const tabId = clicked.dataset.tab;
+            document.getElementById(tabId).classList.add("active");
+          });
+        }
+
+        // --- Edit Profile functionality (AJAX) ---
+        if (editProfileBtn) {
+          editProfileBtn.addEventListener("click", () => {
+            const isEditable = profileForm.classList.toggle("editable");
+
+            if (isEditable) {
+              // CHANGE TO EDIT MODE
+              editProfileBtn.innerHTML = `<span class="material-symbols-outlined">save</span><span>Save Changes</span>`;
+              editProfileBtn.classList.add("btn-save");
+              
+              // Show the new Change Photo button
+              changeProfilePhotoBtn.style.display = 'inline-flex';
+              
+              formInputs.forEach((input) => {
+                if (editableFields.includes(input.id)) {
+                  input.removeAttribute("readonly");
+                }
+              });
+              
+            } else {
+              // CHANGE TO READONLY MODE (Initiate Save)
+              
+              // Hide the Change Photo button
+              changeProfilePhotoBtn.style.display = 'none';
+
+              saveProfileChanges();
+            }
+          });
+        }
+
+        // Helper function to handle AJAX submission
+        const saveProfileChanges = async () => {
+            editProfileBtn.disabled = true;
+            editProfileBtn.innerHTML = `<span>Saving...</span>`; 
+            
+            // Set inputs back to readonly mode
+            formInputs.forEach(input => input.setAttribute("readonly", true));
+            profileForm.classList.remove("editable");
+
+            try {
+                // Serialize the main form fields
+                const formData = new FormData(profileForm);
+
+                // Manually append profile photo (since it’s outside the form)
+                if (profilePhotoFile && profilePhotoFile.files.length > 0) {
+                    // Append the file using the name expected by Flask ('profilePhotoFile')
+                    formData.append('profilePhotoFile', profilePhotoFile.files[0]);
+                }
+
+                const response = await fetch(profileForm.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Refresh the page to show updated read-only fields, new photo, and flash message
+                    window.location.reload(); 
+                } else {
+                    // Show error message
+                    console.error('Error saving profile:', result.message);
+                    alert('Error saving profile: ' + result.message); 
+                    
+                    // Re-enable edit mode if saving failed so user can correct
+                    profileForm.classList.add("editable");
+                    
+                    editableFields.forEach(fieldId => {
+                         const input = document.getElementById(fieldId);
+                         if (input) input.removeAttribute("readonly");
+                    });
+                }
+            } catch (error) {
+                console.error('Network or system error:', error);
+                alert('A network error occurred while trying to save.');
+            } finally {
+                // Restore button state if not reloading
+                if (profileForm.classList.contains("editable")) {
+                    editProfileBtn.innerHTML = `<span class="material-symbols-outlined">save</span><span>Save Changes</span>`;
+                    editProfileBtn.classList.add("btn-save");
+                } else {
+                    editProfileBtn.innerHTML = `<span class="material-symbols-outlined">edit</span><span>Edit Profile</span>`;
+                    editProfileBtn.classList.remove("btn-save");
+                }
+                editProfileBtn.disabled = false;
+            }
+        };
+
+        // Placeholder for Change Password button
+        if (changePasswordBtn) {
+          changePasswordBtn.addEventListener("click", () => {
+            alert("Change Password feature is currently under development.");
+          });
+        }
+      });
+
+      // Auto-dismiss alerts after 4 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.transition = "opacity 0.5s ease";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 4000);
+
+// --- 1. MODAL CONTROLS ---
+function openPwdModal() {
+    document.getElementById('passwordModal').classList.add('active');
+    document.getElementById('changePasswordForm').reset();
+    resetMeter();
+}
+
+function closePwdModal() {
+    document.getElementById('passwordModal').classList.remove('active');
+}
+
+// --- 2. TOGGLE PASSWORD VISIBILITY ---
+function toggleVisibility(fieldId, icon) {
+    const input = document.getElementById(fieldId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "visibility";
+    } else {
+        input.type = "password";
+        icon.textContent = "visibility_off";
+    }
+}
+
+// --- 3. REAL-TIME STRENGTH CHECKER ---
+function checkStrength() {
+    const val = document.getElementById('newPassword').value;
+    const bar = document.getElementById('strengthBar');
+    const text = document.getElementById('strengthText');
+    let strength = 0;
+
+    if(val.length > 5) strength += 1;
+    if(val.length > 7) strength += 1;
+    if(/[A-Z]/.test(val)) strength += 1;
+    if(/[0-9]/.test(val)) strength += 1;
+    if(/[^A-Za-z0-9]/.test(val)) strength += 1;
+
+    let color = '#e5e7eb';
+    let label = 'Too Weak';
+    let width = '0%';
+
+    switch(strength) {
+        case 1: width = '20%'; color = '#ef4444'; label = 'Weak'; break; // Red
+        case 2: width = '40%'; color = '#f97316'; label = 'Fair'; break; // Orange
+        case 3: width = '60%'; color = '#eab308'; label = 'Good'; break; // Yellow
+        case 4: width = '80%'; color = '#10b981'; label = 'Strong'; break; // Green
+        case 5: width = '100%'; color = '#059669'; label = 'Excellent'; break; // Dark Green
+    }
+
+    bar.style.width = width;
+    bar.style.backgroundColor = color;
+    text.textContent = label;
+    text.style.color = color;
+}
+
+function resetMeter() {
+    const bar = document.getElementById('strengthBar');
+    const text = document.getElementById('strengthText');
+    bar.style.width = '0%';
+    text.textContent = '';
+}
+
+// --- 4. REAL-TIME MATCH CHECKER ---
+function checkMatch() {
+    const p1 = document.getElementById('newPassword').value;
+    const p2 = document.getElementById('confirmPassword').value;
+    const msg = document.getElementById('matchMessage');
+    
+    if (p2.length === 0) {
+        msg.textContent = "";
+        return;
+    }
+
+    if (p1 === p2) {
+        msg.innerHTML = '<span style="color:#10b981">✓ Passwords match</span>';
+    } else {
+        msg.innerHTML = '<span style="color:#ef4444">✕ Passwords do not match</span>';
+    }
+}
+
+// --- 5. AJAX FORM SUBMISSION (UPDATED) ---
+document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('savePwdBtn');
+    const originalText = btn.innerHTML;
+    
+    // Add loading spinner
+    btn.innerHTML = '<span class="material-symbols-outlined spin" style="font-size:18px; vertical-align:middle;">sync</span> Updating...';
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch("{{ url_for('driver_change_password') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            // 1. Close the Input Modal
+            closePwdModal();
+            
+            // 2. Open the Success Modal
+            document.getElementById('pwdSuccessModal').classList.add('active');
+            
+            // Optional: Reset form
+            document.getElementById('changePasswordForm').reset();
+            resetMeter();
+        } else {
+            // Show error inside the modal instead of alert
+            const msgDiv = document.getElementById('matchMessage');
+            msgDiv.innerHTML = `<span style="color:#ef4444; font-weight:600;">⚠️ ${data.message}</span>`;
+            
+            // Shake animation for error
+            document.querySelector('.pwd-modal-card').classList.add('shake');
+            setTimeout(() => document.querySelector('.pwd-modal-card').classList.remove('shake'), 400);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An network error occurred. Please try again.');
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+});
+
+// Helper to close the success modal
+function closeSuccessModal() {
+    document.getElementById('pwdSuccessModal').classList.remove('active');
+}
+    </script>
+  </body>
+</html>
