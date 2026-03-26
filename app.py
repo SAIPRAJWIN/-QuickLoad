@@ -40,8 +40,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # MySQL Database Configuration
 db_config = {
     'host': "localhost",
-    'user': "root",
-    'password': "Rohith1202bn*",
+    'user': "ruxnlbvker",
+    'password': "ndjbh8Vef6ZGO$o8",
     'database': "vaahansetu"
 }
 
