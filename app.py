@@ -41,7 +41,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db_config = {
     'host': "vaahansetu-server.mysql.database.azure.com",
     'user': "ruxnlbvker@vaahansetu-server",
-    'password': "ndjbh8Vef6ZGO$o8",
+    'password': "Rohith1202bn*",
     'database': "vaahansetu-server",
     'port': 3306,
     'ssl_disabled': False  
