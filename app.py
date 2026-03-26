@@ -39,10 +39,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # MySQL Database Configuration
 db_config = {
-    'host': "localhost",
+    'host': "vaahansetu-server.mysql.database.azure.com",
     'user': "ruxnlbvker",
     'password': "ndjbh8Vef6ZGO$o8",
-    'database': "vaahansetu"
+    'database': "vaahansetu-server"
 }
 
 # --- Initialization ---
