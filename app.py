@@ -4515,6 +4515,6 @@ def delete_team_member(type, id):
     return redirect(url_for('admin_developers'))
 # Change the bottom of your file to:
 if __name__ == '__main__':
-    //create_database_if_not_exists()
+    #//create_database_if_not_exists()
     create_tables()
     socketio.run(app, debug=True)
