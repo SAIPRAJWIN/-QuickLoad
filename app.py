@@ -28,8 +28,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '1234'
 
 # --- NEW: Email Configuration for OTP (UPDATE THESE) ---
-EMAIL_SENDER = 'og.capstone@gmail.com' 
-EMAIL_PASSWORD = 'ddvv xrme zvnj qyma' # Use an App Password if using Gmail
+EMAIL_SENDER = '' 
+EMAIL_PASSWORD = '' # Use an App Password if using Gmail
 EMAIL_SMTP_SERVER = 'smtp.gmail.com' # Change if not using Gmail
 EMAIL_SMTP_PORT = 587 
 
@@ -39,9 +39,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # MySQL Database Configuration
 db_config = {
-    'host': "vaahansetu-server.mysql.database.azure.com",
-    'user': "ruxnlbvker",
-    'password': "Rohith1202bn*",
+    'host': "",
+    'user': "",
+    'password': "",
     'database': "vaahansetu",
     'port': 3306,
     'ssl_ca': "MysqlflexGlobalRootCA.crt.pem"
